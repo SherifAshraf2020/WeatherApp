@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -55,4 +56,14 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+    // --- Networking (Retrofit & API Integration) ---
+    implementation(libs.retrofit)               // Core library for HTTP requests
+    implementation(libs.converter.gson)         // JSON to Kotlin Objects converter
+    implementation(libs.gson)                   // Google's JSON processing library
+
+    // --- Local Storage (Room Database) ---
+    implementation(libs.room.runtime)           // Room persistence library
+    implementation(libs.room.ktx)               // Coroutines support for Room
+    ksp(libs.room.compiler)                     // Annotation processor (KSP)
 }
