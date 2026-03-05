@@ -1,4 +1,4 @@
-package com.example.weatherapp.data
+package com.example.weatherapp.data.models
 
 data class HourlyWeather(
     val dt: Long,
