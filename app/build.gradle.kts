@@ -80,4 +80,8 @@ dependencies {
     implementation(libs.room.runtime)           // Room persistence library
     implementation(libs.room.ktx)               // Coroutines support for Room
     ksp(libs.room.compiler)                     // Annotation processor (KSP)
+
+    //--- Splash Screen ---
+    implementation(libs.androidx.core.splashscreen)
+
 }
