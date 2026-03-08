@@ -5,7 +5,7 @@ import com.example.weatherapp.data.datasource.remote.WeatherService
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-object RetrofitInstance {
+object Network {
 
     private val retrofit: Retrofit by lazy {
         Retrofit.Builder()

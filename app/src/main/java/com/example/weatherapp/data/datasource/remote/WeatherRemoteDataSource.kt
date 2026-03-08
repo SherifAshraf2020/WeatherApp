@@ -2,10 +2,10 @@ package com.example.weatherapp.data.datasource.remote
 
 import com.example.weatherapp.data.models.current.CurrentWeatherResponse
 import com.example.weatherapp.data.models.forecast.ForecastResponse
-import com.example.weatherapp.data.network.RetrofitInstance
+import com.example.weatherapp.data.network.Network
 
 class WeatherRemoteDataSource {
-    private val weatherService: WeatherService = RetrofitInstance.weatherService
+    private val weatherService: WeatherService = Network.weatherService
 
     suspend fun getCurrentWeather(lat: Double, lon: Double, apiKey: String): Result<CurrentWeatherResponse> {
         return try {
