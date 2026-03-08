@@ -19,6 +19,27 @@ class WeatherViewModel(private val repository: WeatherRepository) : ViewModel() 
     private val _eventFlow = MutableSharedFlow<WeatherEvent>()
     val eventFlow = _eventFlow.asSharedFlow()
 
+
+    init {
+        checkAppStartStatus()
+    }
+
+    private fun checkAppStartStatus() {
+        if (repository.isFirstTimeUser()) {
+            _uiState.value = WeatherUiState.SetupRequired
+        } else {
+            _uiState.value = WeatherUiState.Loading
+        }
+    }
+
+    fun onSetupDoneClicked(tempUnit: String, timeFormat: String, windUnit: String) {
+        viewModelScope.launch {
+            repository.saveInitialSetup(tempUnit, timeFormat, windUnit)
+            _eventFlow.emit(WeatherEvent.SetupCompleted)
+        }
+
+    }
+
     fun onMenuClicked() {
         viewModelScope.launch {
             _eventFlow.emit(WeatherEvent.OpenNavigationDrawer)
