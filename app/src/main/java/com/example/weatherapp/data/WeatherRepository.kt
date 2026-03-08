@@ -2,12 +2,16 @@ package com.example.weatherapp.data
 
 import com.example.weatherapp.BuildConfig
 import com.example.weatherapp.R
+import com.example.weatherapp.data.datasource.local.PreferenceManager
 import com.example.weatherapp.data.datasource.remote.WeatherRemoteDataSource
 import com.example.weatherapp.data.models.current.CurrentWeatherResponse
 import com.example.weatherapp.data.models.forecast.ForecastResponse
 import com.example.weatherapp.data.models.home.FullWeatherData
 
-class WeatherRepository(val remoteDataSource: WeatherRemoteDataSource) {
+class WeatherRepository(
+    val remoteDataSource: WeatherRemoteDataSource,
+    private val preferenceManager: PreferenceManager
+) {
 
     suspend fun getHomeWeather(lat: Double, lon: Double, apiKey: String): Result<FullWeatherData> {
 
@@ -27,5 +31,14 @@ class WeatherRepository(val remoteDataSource: WeatherRemoteDataSource) {
         }
 
 
+    }
+
+    fun isFirstTimeUser(): Boolean {
+        return preferenceManager.isFirstRun()
+    }
+
+    fun saveInitialSetup(tempUnit: String, timeFormat: String, windUnit: String){
+        preferenceManager.saveSettings(tempUnit, timeFormat, windUnit)
+        preferenceManager.setFirstRun(false)
     }
 }
