@@ -1,6 +1,7 @@
 package com.example.weatherapp.presentation
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.weatherapp.BuildConfig
 import com.example.weatherapp.data.Constants
@@ -102,3 +103,10 @@ class WeatherViewModel(private val repository: WeatherRepository) : ViewModel() 
     }
 }
 
+
+@Suppress("UNCHECKED_CAST")
+class WeatherViewModelFactory(private val repository: WeatherRepository) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        return WeatherViewModel(repository) as T
+    }
+}
