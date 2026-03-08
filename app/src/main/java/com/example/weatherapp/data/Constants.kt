@@ -5,4 +5,7 @@ object Constants {
     const val UNITS = "metric"
     const val WEATHER_ENDPOINT = "weather"
     const val FORECAST_ENDPOINT = "forecast"
+
+
+    const val ERROR_FETCH_DATA = "FAILED_TO_FETCH_DATA"
 }
