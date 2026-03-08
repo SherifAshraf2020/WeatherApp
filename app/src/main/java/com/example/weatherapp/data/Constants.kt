@@ -8,4 +8,7 @@ object Constants {
 
 
     const val ERROR_FETCH_DATA = "FAILED_TO_FETCH_DATA"
+
+
+    const val PREFS_NAME = "weather_app_settings"
 }
