@@ -1,19 +1,36 @@
 package com.example.weatherapp.presentation
 
+import android.content.Context
+import android.location.Geocoder
+import android.location.Location
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.weatherapp.BuildConfig
 import com.example.weatherapp.data.Constants
+import com.example.weatherapp.data.FusedLocationHelper
 import com.example.weatherapp.data.WeatherRepository
 import com.example.weatherapp.data.models.home.FullWeatherData
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.util.Locale
 
-class WeatherViewModel(private val repository: WeatherRepository) : ViewModel() {
+class WeatherViewModel
+    (
+    private val repository: WeatherRepository,
+    private val locationHelper: FusedLocationHelper,
+    private val context: Context
+) : ViewModel() {
+
+    val locationState = mutableStateOf<Location?>(null)
+    val addressState = mutableStateOf("Waiting...")
+
     private val _uiState = MutableStateFlow<WeatherUiState>(WeatherUiState.Loading)
     val uiState: StateFlow<WeatherUiState> = _uiState
 
@@ -30,13 +47,39 @@ class WeatherViewModel(private val repository: WeatherRepository) : ViewModel() 
             _uiState.value = WeatherUiState.SetupRequired
         } else {
 
-            checkStatusAndFetch(
-                isPermissionGranted = false,
-                isNetworkAvailable = true,
-                isGpsEnabled = true
-            )
+            _eventFlow.tryEmit(WeatherEvent.RequestLocationPermission)
         }
     }
+
+    fun startGettingLocation() {
+        locationHelper.getFreshLocation { location ->
+            locationState.value = location
+            updateAddress(location)
+            fetchWeather(location.latitude, location.longitude)
+        }
+    }
+
+    private fun updateAddress(location: Location) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val geocoder = Geocoder(context, Locale.getDefault())
+                val addresses = geocoder.getFromLocation(location.latitude, location.longitude, 1)
+                if (!addresses.isNullOrEmpty()) {
+                    val address = addresses[0]
+                    val addressText =
+                        "${address.thoroughfare ?: "Unknown St"}, ${address.locality ?: "City"}"
+                    withContext(Dispatchers.Main) {
+                        addressState.value = addressText
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    addressState.value = "Address not found"
+                }
+            }
+        }
+    }
+
 
     fun onSetupDoneClicked(tempUnit: String, timeFormat: String, windUnit: String) {
         viewModelScope.launch {
@@ -86,7 +129,7 @@ class WeatherViewModel(private val repository: WeatherRepository) : ViewModel() 
                 return@launch
             }
 
-            fetchWeather(30.0444, 31.2357)
+            startGettingLocation()
         }
     }
 
@@ -115,9 +158,12 @@ class WeatherViewModel(private val repository: WeatherRepository) : ViewModel() 
 }
 
 
-@Suppress("UNCHECKED_CAST")
-class WeatherViewModelFactory(private val repository: WeatherRepository) : ViewModelProvider.Factory {
+class WeatherViewModelFactory(
+    private val repository: WeatherRepository,
+    private val locationHelper: FusedLocationHelper,
+    private val context: Context
+) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        return WeatherViewModel(repository) as T
+        return WeatherViewModel(repository, locationHelper, context) as T
     }
 }
