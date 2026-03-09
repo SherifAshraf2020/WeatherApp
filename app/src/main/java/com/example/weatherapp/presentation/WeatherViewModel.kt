@@ -41,6 +41,8 @@ class WeatherViewModel
     private val _eventFlow = MutableSharedFlow<WeatherEvent>()
     val eventFlow = _eventFlow.asSharedFlow()
 
+    var isSplashLoading = mutableStateOf(true)
+        private set
 
     init {
         checkAppStartStatus()
@@ -49,9 +51,12 @@ class WeatherViewModel
     private fun checkAppStartStatus() {
         if (repository.isFirstTimeUser()) {
             _uiState.value = WeatherUiState.SetupRequired
+            isSplashLoading.value = false
         } else {
-
-            _eventFlow.tryEmit(WeatherEvent.RequestLocationPermission)
+            viewModelScope.launch {
+                _eventFlow.emit(WeatherEvent.RequestLocationPermission)
+                isSplashLoading.value = false
+            }
         }
     }
 

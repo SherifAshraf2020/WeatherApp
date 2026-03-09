@@ -36,17 +36,18 @@ class MainActivity : ComponentActivity() {
                 val viewModel: WeatherViewModel = viewModel(factory = factory)
 
                 // 3. الـ Launcher لطلب الصلاحيات (Location Permission)
-                val permissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
-                    contract = androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions()
-                ) { permissions ->
-                    val isGranted = permissions.values.any { it }
-                    // بنبلغ الـ ViewModel بالنتيجة وهو يتصرف
-                    viewModel.checkStatusAndFetch(
-                        isPermissionGranted = isGranted,
-                        isNetworkAvailable = true, // ممكن نضيف فحص النت لاحقاً
-                        isGpsEnabled = locationHelper.isLocationEnabled()
-                    )
-                }
+                val permissionLauncher =
+                    androidx.activity.compose.rememberLauncherForActivityResult(
+                        contract = androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions()
+                    ) { permissions ->
+                        val isGranted = permissions.values.any { it }
+                        // بنبلغ الـ ViewModel بالنتيجة وهو يتصرف
+                        viewModel.checkStatusAndFetch(
+                            isPermissionGranted = isGranted,
+                            isNetworkAvailable = true, // ممكن نضيف فحص النت لاحقاً
+                            isGpsEnabled = locationHelper.isLocationEnabled()
+                        )
+                    }
 
                 // 4. مراقبة الـ Events اللحظية (طلب الصلاحيات، الـ GPS مقفول، إلخ)
                 androidx.compose.runtime.LaunchedEffect(Unit) {
@@ -60,16 +61,22 @@ class MainActivity : ComponentActivity() {
                                     )
                                 )
                             }
+
                             is WeatherEvent.GpsNotEnabled -> {
-                                android.widget.Toast.makeText(this@MainActivity, "Please enable GPS", android.widget.Toast.LENGTH_SHORT).show()
+                                android.widget.Toast.makeText(
+                                    this@MainActivity,
+                                    "Please enable GPS",
+                                    android.widget.Toast.LENGTH_SHORT
+                                ).show()
                             }
+
                             else -> {}
                         }
                     }
                 }
 
                 splashScreen.setKeepOnScreenCondition {
-                    viewModel.uiState.value == WeatherUiState.Loading
+                    viewModel.isSplashLoading.value
                 }
 
                 val uiState by viewModel.uiState.collectAsState()
@@ -78,6 +85,7 @@ class MainActivity : ComponentActivity() {
                     is WeatherUiState.SetupRequired -> {
                         InitialSetupScreen(viewModel)
                     }
+
                     else -> {
                         MainScreenWithDrawer(viewModel)
                     }
