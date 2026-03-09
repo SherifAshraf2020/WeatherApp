@@ -29,10 +29,8 @@ fun MainScreenWithDrawer(viewModel: WeatherViewModel) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
-    // Pager state for 3 main screens
     val pagerState = rememberPagerState(pageCount = { 3 })
 
-    // Observe navigation events
     LaunchedEffect(Unit) {
         viewModel.eventFlow.collect { event ->
             if (event is WeatherEvent.OpenNavigationDrawer) {
@@ -99,7 +97,6 @@ fun MainScreenWithDrawer(viewModel: WeatherViewModel) {
                     .fillMaxSize()
                     .padding(paddingValues)
             ) {
-                // 1. The Content Pager (Main Area)
                 HorizontalPager(
                     state = pagerState,
                     modifier = Modifier
@@ -113,7 +110,6 @@ fun MainScreenWithDrawer(viewModel: WeatherViewModel) {
                     }
                 }
 
-                // 2. Interactive Pager Indicator (The Dots)
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -181,7 +177,6 @@ fun WeatherLogicContainer(state: WeatherUiState, viewModel: WeatherViewModel) {
     }
 }
 
-// --- Detailed English Screens ---
 
 @Composable
 fun CurrentWeatherScreen(data: FullWeatherData) {

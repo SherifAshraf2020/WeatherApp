@@ -8,7 +8,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.weatherapp.BuildConfig
-import com.example.weatherapp.data.Constants
 import com.example.weatherapp.data.FusedLocationHelper
 import com.example.weatherapp.data.WeatherRepository
 import com.example.weatherapp.data.models.home.FullWeatherData

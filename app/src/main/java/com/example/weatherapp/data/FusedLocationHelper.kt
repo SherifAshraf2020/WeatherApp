@@ -15,7 +15,6 @@ class FusedLocationHelper(private val context: Context) {
     fun getFreshLocation(onLocationResult: (Location) -> Unit) {
         val cancellationTokenSource = CancellationTokenSource()
 
-        // محاولة سريعة لجلب آخر موقع مسجل لكسر الشاشة البيضاء
         fusedLocationProviderClient.lastLocation.addOnSuccessListener { location ->
             location?.let { onLocationResult(it) }
         }
