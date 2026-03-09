@@ -36,7 +36,13 @@ class WeatherViewModel(private val repository: WeatherRepository) : ViewModel() 
     fun onSetupDoneClicked(tempUnit: String, timeFormat: String, windUnit: String) {
         viewModelScope.launch {
             repository.saveInitialSetup(tempUnit, timeFormat, windUnit)
+            _uiState.value = WeatherUiState.Loading
             _eventFlow.emit(WeatherEvent.SetupCompleted)
+            checkStatusAndFetch(
+                isPermissionGranted = false,
+                isNetworkAvailable = true,
+                isGpsEnabled = true
+            )
         }
 
     }
