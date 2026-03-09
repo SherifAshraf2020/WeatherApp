@@ -11,8 +11,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.weatherapp.data.FusedLocationHelper
-import com.example.weatherapp.data.WeatherRepository
+import com.example.weatherapp.data.datasource.location.FusedLocationHelper
+import com.example.weatherapp.data.repository.WeatherRepository
 import com.example.weatherapp.data.datasource.local.PreferenceManager
 import com.example.weatherapp.data.datasource.remote.WeatherRemoteDataSource
 import com.example.weatherapp.presentation.*

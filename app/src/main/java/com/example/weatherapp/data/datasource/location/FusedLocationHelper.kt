@@ -1,10 +1,11 @@
-package com.example.weatherapp.data
+package com.example.weatherapp.data.datasource.location
 
 import android.annotation.SuppressLint
 import android.content.Context
 import android.location.Location
 import android.location.LocationManager
-import com.google.android.gms.location.*
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
 
 class FusedLocationHelper(private val context: Context) {

@@ -8,8 +8,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.weatherapp.BuildConfig
-import com.example.weatherapp.data.FusedLocationHelper
-import com.example.weatherapp.data.WeatherRepository
+import com.example.weatherapp.data.datasource.location.FusedLocationHelper
+import com.example.weatherapp.data.repository.WeatherRepository
 import com.example.weatherapp.data.models.home.FullWeatherData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow

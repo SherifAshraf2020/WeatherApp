@@ -1,11 +1,8 @@
-package com.example.weatherapp.data
+package com.example.weatherapp.data.repository
 
-import com.example.weatherapp.BuildConfig
-import com.example.weatherapp.R
+import com.example.weatherapp.data.Constants
 import com.example.weatherapp.data.datasource.local.PreferenceManager
 import com.example.weatherapp.data.datasource.remote.WeatherRemoteDataSource
-import com.example.weatherapp.data.models.current.CurrentWeatherResponse
-import com.example.weatherapp.data.models.forecast.ForecastResponse
 import com.example.weatherapp.data.models.home.FullWeatherData
 
 class WeatherRepository(
