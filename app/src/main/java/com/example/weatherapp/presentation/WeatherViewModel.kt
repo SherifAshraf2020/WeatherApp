@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Locale
@@ -28,8 +29,11 @@ class WeatherViewModel
     private val context: Context
 ) : ViewModel() {
 
-    val locationState = mutableStateOf<Location?>(null)
-    val addressState = mutableStateOf("Waiting...")
+    private val _locationState = MutableStateFlow<Location?>(null)
+    val locationState: StateFlow<Location?> = _locationState.asStateFlow()
+
+    private val _addressState = MutableStateFlow("Waiting...")
+    val addressState: StateFlow<String> = _addressState.asStateFlow()
 
     private val _uiState = MutableStateFlow<WeatherUiState>(WeatherUiState.Loading)
     val uiState: StateFlow<WeatherUiState> = _uiState
@@ -53,7 +57,7 @@ class WeatherViewModel
 
     fun startGettingLocation() {
         locationHelper.getFreshLocation { location ->
-            locationState.value = location
+            _locationState.value = location
             updateAddress(location)
             fetchWeather(location.latitude, location.longitude)
         }
@@ -69,12 +73,12 @@ class WeatherViewModel
                     val addressText =
                         "${address.thoroughfare ?: "Unknown St"}, ${address.locality ?: "City"}"
                     withContext(Dispatchers.Main) {
-                        addressState.value = addressText
+                        _addressState.value = addressText
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    addressState.value = "Address not found"
+                    _addressState.value = "Address not found"
                 }
             }
         }
