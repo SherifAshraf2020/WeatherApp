@@ -51,6 +51,9 @@ class MainActivity : ComponentActivity() {
 
                 // 4. مراقبة الـ Events اللحظية (طلب الصلاحيات، الـ GPS مقفول، إلخ)
                 androidx.compose.runtime.LaunchedEffect(Unit) {
+                    if (checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                        viewModel.startGettingLocation()
+                    }
                     viewModel.eventFlow.collect { event ->
                         when (event) {
                             is WeatherEvent.RequestLocationPermission -> {

@@ -4,30 +4,31 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.location.Location
 import android.location.LocationManager
-import android.os.Looper
-import com.google.android.gms.location.LocationCallback
-import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.location.LocationResult
-import com.google.android.gms.location.LocationServices
-import com.google.android.gms.location.Priority
+import com.google.android.gms.location.*
+import com.google.android.gms.tasks.CancellationTokenSource
 
 class FusedLocationHelper(private val context: Context) {
     private val fusedLocationProviderClient =
-        LocationServices.getFusedLocationProviderClient(context)
+        LocationServices.getFusedLocationProviderClient(context.applicationContext)
 
     @SuppressLint("MissingPermission")
     fun getFreshLocation(onLocationResult: (Location) -> Unit) {
-        fusedLocationProviderClient.requestLocationUpdates(
-            LocationRequest.Builder(5000).apply {
-                setPriority(Priority.PRIORITY_BALANCED_POWER_ACCURACY)
-            }.build(),
-            object : LocationCallback() {
-                override fun onLocationResult(locationResult: LocationResult) {
-                    locationResult.lastLocation?.let { onLocationResult(it) }
-                }
-            },
-            Looper.getMainLooper()
-        )
+        val cancellationTokenSource = CancellationTokenSource()
+
+        // محاولة سريعة لجلب آخر موقع مسجل لكسر الشاشة البيضاء
+        fusedLocationProviderClient.lastLocation.addOnSuccessListener { location ->
+            location?.let { onLocationResult(it) }
+        }
+
+        // طلب الموقع الحالي (مرة واحدة) بجودة عالية
+        fusedLocationProviderClient.getCurrentLocation(
+            Priority.PRIORITY_HIGH_ACCURACY,
+            cancellationTokenSource.token
+        ).addOnSuccessListener { location ->
+            location?.let { onLocationResult(it) }
+        }.addOnFailureListener {
+            cancellationTokenSource.cancel()
+        }
     }
 
     fun isLocationEnabled(): Boolean {
