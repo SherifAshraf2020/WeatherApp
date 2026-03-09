@@ -5,7 +5,7 @@
 
     <style name="Theme.App.Starting" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">#1E1E1E</item>
-        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_weather_logo</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_background</item>
         <item name="postSplashScreenTheme">@style/Theme.WeatherApp</item>
     </style>
 </resources>
