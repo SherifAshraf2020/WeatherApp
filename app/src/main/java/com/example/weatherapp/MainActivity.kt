@@ -1,9 +1,12 @@
 package com.example.weatherapp
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -36,24 +39,27 @@ class MainActivity : ComponentActivity() {
                 val viewModel: WeatherViewModel = viewModel(factory = factory)
 
                 // 3. الـ Launcher لطلب الصلاحيات (Location Permission)
-                val permissionLauncher =
-                    androidx.activity.compose.rememberLauncherForActivityResult(
-                        contract = androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions()
-                    ) { permissions ->
-                        val isGranted = permissions.values.any { it }
-                        // بنبلغ الـ ViewModel بالنتيجة وهو يتصرف
-                        viewModel.checkStatusAndFetch(
-                            isPermissionGranted = isGranted,
-                            isNetworkAvailable = true, // ممكن نضيف فحص النت لاحقاً
-                            isGpsEnabled = locationHelper.isLocationEnabled()
-                        )
-                    }
+                val permissionLauncher = rememberLauncherForActivityResult(
+                    contract = ActivityResultContracts.RequestMultiplePermissions()
+                ) { permissions ->
+                    val isGranted = permissions.values.any { it }
+                    viewModel.checkStatusAndFetch(
+                        isPermissionGranted = isGranted,
+                        isNetworkAvailable = isNetworkAvailable(),
+                        isGpsEnabled = locationHelper.isLocationEnabled()
+                    )
+                }
 
-                // 4. مراقبة الـ Events اللحظية (طلب الصلاحيات، الـ GPS مقفول، إلخ)
                 androidx.compose.runtime.LaunchedEffect(Unit) {
-                    if (checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                        viewModel.startGettingLocation()
-                    }
+                    // السطر ده هو "المايسترو" اللي بيبدأ كل حاجة صح
+                    val isGranted = checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED
+
+                    viewModel.checkStatusAndFetch(
+                        isPermissionGranted = isGranted,
+                        isNetworkAvailable = isNetworkAvailable(),
+                        isGpsEnabled = locationHelper.isLocationEnabled()
+                    )
+
                     viewModel.eventFlow.collect { event ->
                         when (event) {
                             is WeatherEvent.RequestLocationPermission -> {
@@ -64,7 +70,6 @@ class MainActivity : ComponentActivity() {
                                     )
                                 )
                             }
-
                             is WeatherEvent.GpsNotEnabled -> {
                                 android.widget.Toast.makeText(
                                     this@MainActivity,
@@ -72,7 +77,13 @@ class MainActivity : ComponentActivity() {
                                     android.widget.Toast.LENGTH_SHORT
                                 ).show()
                             }
-
+                            is WeatherEvent.NetworkNotFound -> {
+                                android.widget.Toast.makeText(
+                                    this@MainActivity,
+                                    "No Internet Connection",
+                                    android.widget.Toast.LENGTH_LONG
+                                ).show()
+                            }
                             else -> {}
                         }
                     }
@@ -95,6 +106,12 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+    private fun isNetworkAvailable(): Boolean {
+        val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
+        val network = connectivityManager.activeNetwork ?: return false
+        val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+        return capabilities.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET)
     }
 }
 
