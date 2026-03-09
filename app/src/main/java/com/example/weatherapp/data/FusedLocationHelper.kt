@@ -19,7 +19,6 @@ class FusedLocationHelper(private val context: Context) {
             location?.let { onLocationResult(it) }
         }
 
-        // طلب الموقع الحالي (مرة واحدة) بجودة عالية
         fusedLocationProviderClient.getCurrentLocation(
             Priority.PRIORITY_HIGH_ACCURACY,
             cancellationTokenSource.token
