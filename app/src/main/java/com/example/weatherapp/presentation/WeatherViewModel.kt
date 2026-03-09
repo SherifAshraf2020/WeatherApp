@@ -123,37 +123,39 @@ class WeatherViewModel
     ) {
         viewModelScope.launch {
             if (!isPermissionGranted) {
-                _uiState.value = WeatherUiState.PermissionRequired
+                isSplashLoading.value = false
                 _eventFlow.emit(WeatherEvent.RequestLocationPermission)
                 return@launch
             }
 
             if (!isNetworkAvailable) {
+                isSplashLoading.value = false
+                _uiState.value = WeatherUiState.Error("No Internet Connection")
                 _eventFlow.emit(WeatherEvent.NetworkNotFound)
                 return@launch
             }
 
             if (!isGpsEnabled) {
+                isSplashLoading.value = false
+                _uiState.value = WeatherUiState.Error("Please enable GPS")
                 _eventFlow.emit(WeatherEvent.GpsNotEnabled)
                 return@launch
             }
 
+            _uiState.value = WeatherUiState.Loading
             startGettingLocation()
         }
     }
 
-
     private fun fetchWeather(lat: Double, lon: Double) {
-
         viewModelScope.launch {
-            _uiState.value = WeatherUiState.Loading
             repository.getHomeWeather(lat, lon, BuildConfig.API_KEY)
                 .onSuccess { data ->
-                    val processed = processWeatherData(data)
-                    _uiState.value = WeatherUiState.Success(processed)
-
+                    _uiState.value = WeatherUiState.Success(processWeatherData(data))
+                    isSplashLoading.value = false
                 }.onFailure {
                     _uiState.value = WeatherUiState.Error("Failed to load weather")
+                    isSplashLoading.value = false
                 }
         }
     }
@@ -167,6 +169,7 @@ class WeatherViewModel
 }
 
 
+@Suppress("UNCHECKED_CAST")
 class WeatherViewModelFactory(
     private val repository: WeatherRepository,
     private val locationHelper: FusedLocationHelper,

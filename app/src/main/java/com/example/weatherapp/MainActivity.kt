@@ -24,21 +24,14 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        // 1. تجهيز الـ Helper والـ Repository
         val locationHelper = FusedLocationHelper(applicationContext)
-        val repository = WeatherRepository(
-            WeatherRemoteDataSource(),
-            PreferenceManager(applicationContext)
-        )
-
-        // 2. تحديث الـ Factory بالباراميترز الجديدة
+        val repository = WeatherRepository(WeatherRemoteDataSource(), PreferenceManager(applicationContext))
         val factory = WeatherViewModelFactory(repository, locationHelper, applicationContext)
 
         setContent {
             WeatherAppTheme {
                 val viewModel: WeatherViewModel = viewModel(factory = factory)
 
-                // 3. الـ Launcher لطلب الصلاحيات (Location Permission)
                 val permissionLauncher = rememberLauncherForActivityResult(
                     contract = ActivityResultContracts.RequestMultiplePermissions()
                 ) { permissions ->
@@ -51,7 +44,6 @@ class MainActivity : ComponentActivity() {
                 }
 
                 androidx.compose.runtime.LaunchedEffect(Unit) {
-                    // السطر ده هو "المايسترو" اللي بيبدأ كل حاجة صح
                     val isGranted = checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED
 
                     viewModel.checkStatusAndFetch(
@@ -63,50 +55,41 @@ class MainActivity : ComponentActivity() {
                     viewModel.eventFlow.collect { event ->
                         when (event) {
                             is WeatherEvent.RequestLocationPermission -> {
-                                permissionLauncher.launch(
-                                    arrayOf(
-                                        android.Manifest.permission.ACCESS_FINE_LOCATION,
-                                        android.Manifest.permission.ACCESS_COARSE_LOCATION
-                                    )
-                                )
+                                permissionLauncher.launch(arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION))
                             }
                             is WeatherEvent.GpsNotEnabled -> {
-                                android.widget.Toast.makeText(
-                                    this@MainActivity,
-                                    "Please enable GPS",
-                                    android.widget.Toast.LENGTH_SHORT
-                                ).show()
+                                requestEnableGps()
                             }
                             is WeatherEvent.NetworkNotFound -> {
-                                android.widget.Toast.makeText(
-                                    this@MainActivity,
-                                    "No Internet Connection",
-                                    android.widget.Toast.LENGTH_LONG
-                                ).show()
+                                android.widget.Toast.makeText(this@MainActivity, "No Internet Connection", android.widget.Toast.LENGTH_LONG).show()
                             }
                             else -> {}
                         }
                     }
                 }
 
-                splashScreen.setKeepOnScreenCondition {
-                    viewModel.isSplashLoading.value
-                }
+                splashScreen.setKeepOnScreenCondition { viewModel.isSplashLoading.value }
 
                 val uiState by viewModel.uiState.collectAsState()
-
                 when (uiState) {
-                    is WeatherUiState.SetupRequired -> {
-                        InitialSetupScreen(viewModel)
-                    }
-
-                    else -> {
-                        MainScreenWithDrawer(viewModel)
-                    }
+                    is WeatherUiState.SetupRequired -> InitialSetupScreen(viewModel)
+                    else -> MainScreenWithDrawer(viewModel)
                 }
             }
         }
     }
+
+    private fun requestEnableGps() {
+        val locationRequest = com.google.android.gms.location.LocationRequest.Builder(com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY, 5000).build()
+        val builder = com.google.android.gms.location.LocationSettingsRequest.Builder().addLocationRequest(locationRequest)
+        val client = com.google.android.gms.location.LocationServices.getSettingsClient(this)
+        client.checkLocationSettings(builder.build()).addOnFailureListener { exception ->
+            if (exception is com.google.android.gms.common.api.ResolvableApiException) {
+                try { exception.startResolutionForResult(this, 100) } catch (e: Exception) {}
+            }
+        }
+    }
+
     private fun isNetworkAvailable(): Boolean {
         val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
         val network = connectivityManager.activeNetwork ?: return false
