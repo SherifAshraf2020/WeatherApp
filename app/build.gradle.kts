@@ -88,4 +88,8 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose.android)
 
     // Library for extended Material icons like WbSunny and Schedule
-    implementation(libs.androidx.compose.material.icons.extended)}
+    implementation(libs.androidx.compose.material.icons.extended)
+
+    // --- Location Services ---
+    implementation(libs.play.services.location)
+}
