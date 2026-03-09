@@ -29,7 +29,12 @@ class WeatherViewModel(private val repository: WeatherRepository) : ViewModel() 
         if (repository.isFirstTimeUser()) {
             _uiState.value = WeatherUiState.SetupRequired
         } else {
-            _uiState.value = WeatherUiState.Loading
+
+            checkStatusAndFetch(
+                isPermissionGranted = false,
+                isNetworkAvailable = true,
+                isGpsEnabled = true
+            )
         }
     }
 
