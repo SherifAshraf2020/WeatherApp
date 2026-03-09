@@ -7,10 +7,13 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.WbSunny // Extended Icon
+import androidx.compose.material.icons.filled.Schedule // Extended Icon
+import androidx.compose.material.icons.filled.Flag // Extended Icon
+import androidx.compose.material.icons.filled.Thermostat // Extended Icon
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,7 +27,6 @@ import androidx.compose.ui.unit.sp
 fun InitialSetupScreen(
     viewModel: WeatherViewModel
 ) {
-    // States to save choices before clicking DONE
     var selectedTempUnit by remember { mutableStateOf("C") }
     var selectedTimeFormat by remember { mutableStateOf("24") }
     var selectedWindUnit by remember { mutableStateOf("km/h") }
@@ -61,8 +63,9 @@ fun InitialSetupScreen(
                 }
 
                 Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                    // 1. Temperature Icon (WbSunny)
                     SettingRow(
-                        icon = Icons.Default.Settings,
+                        icon = Icons.Default.WbSunny,
                         title = "Temperature",
                         options = listOf("F", "C"),
                         initialIndex = 1,
@@ -70,8 +73,9 @@ fun InitialSetupScreen(
                     )
                     HorizontalDivider(color = Color.DarkGray, thickness = 0.5.dp)
 
+                    // 2. Time format Icon (Schedule)
                     SettingRow(
-                        icon = Icons.Default.Info,
+                        icon = Icons.Default.Schedule,
                         title = "Time format",
                         options = listOf("12", "24"),
                         initialIndex = 1,
@@ -79,6 +83,7 @@ fun InitialSetupScreen(
                     )
                     HorizontalDivider(color = Color.DarkGray, thickness = 0.5.dp)
 
+                    // 3. Wind speed Row (Flag Icon & Arrow Right)
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -88,20 +93,21 @@ fun InitialSetupScreen(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Info, contentDescription = null, tint = Color.LightGray, modifier = Modifier.size(20.dp))
+                            Icon(Icons.Default.Flag, contentDescription = null, tint = Color.LightGray, modifier = Modifier.size(20.dp))
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(text = "Wind speed", color = Color.White, fontSize = 16.sp)
                         }
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(text = selectedWindUnit, color = Color.Gray, fontSize = 14.sp)
-                            Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = Color.Gray)
+                            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = Color.Gray)
                         }
                     }
                     HorizontalDivider(color = Color.DarkGray, thickness = 0.5.dp)
 
+                    // 4. Notification & Status Bar (Notifications & Thermostat)
                     SwitchRow(icon = Icons.Default.Notifications, title = "Notification")
                     HorizontalDivider(color = Color.DarkGray, thickness = 0.5.dp)
-                    SwitchRow(icon = Icons.Default.Settings, title = "Status bar")
+                    SwitchRow(icon = Icons.Default.Thermostat, title = "Status bar")
                 }
 
                 Button(
@@ -124,7 +130,6 @@ fun InitialSetupScreen(
             }
         }
 
-        // Wind Speed Unit Dialog
         if (showWindDialog) {
             AlertDialog(
                 onDismissRequest = { showWindDialog = false },

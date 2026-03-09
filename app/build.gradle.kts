@@ -86,4 +86,6 @@ dependencies {
 
     // Dependency for using viewModel() in Composable functions and handling ViewModelFactory
     implementation(libs.androidx.lifecycle.viewmodel.compose.android)
-}
+
+    // Library for extended Material icons like WbSunny and Schedule
+    implementation(libs.androidx.compose.material.icons.extended)}
