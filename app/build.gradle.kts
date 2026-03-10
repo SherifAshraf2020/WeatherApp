@@ -95,4 +95,7 @@ dependencies {
 
     // Image Loading Library (Coil) for Weather Icons
     implementation(libs.coil.compose)
+
+    // free OpenStreetMap Android Library for Android
+    implementation(libs.osmdroid.android)
 }
