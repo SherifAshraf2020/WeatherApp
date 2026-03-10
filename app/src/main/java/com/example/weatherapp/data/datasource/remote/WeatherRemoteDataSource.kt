@@ -1,5 +1,6 @@
 package com.example.weatherapp.data.datasource.remote
 
+import android.util.Log
 import com.example.weatherapp.data.models.current.CurrentWeatherResponse
 import com.example.weatherapp.data.models.forecast.ForecastResponse
 import com.example.weatherapp.data.network.Network
@@ -10,6 +11,7 @@ class WeatherRemoteDataSource {
     suspend fun getCurrentWeather(lat: Double, lon: Double, units: String, apiKey: String): Result<CurrentWeatherResponse> {
         return try {
             val response = weatherService.getCurrentWeather(lat, lon, apiKey, units)
+            Log.d("WeatherAPI", "Raw response: ${response.body()}")
             if (response.isSuccessful) {
                 val data = response.body() ?: throw Exception("Empty body")
                 Result.success(data)
@@ -21,9 +23,10 @@ class WeatherRemoteDataSource {
         }
     }
 
-    suspend fun getForecast(lat: Double, lon: Double, apiKey: String): Result<ForecastResponse> {
+    suspend fun getForecast(lat: Double, lon: Double, apiKey: String, units: String): Result<ForecastResponse> {
         return try {
-            val response = weatherService.getForecast(lat, lon, apiKey)
+            val response = weatherService.getForecast(lat, lon, apiKey, units)
+            Log.d("WeatherAPI", "Raw response: ${response.body()}")
             if (response.isSuccessful) {
                 val data = response.body() ?: throw Exception("Empty body")
                 Result.success(data)

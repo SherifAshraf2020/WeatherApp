@@ -28,7 +28,6 @@ fun MainScreenWithDrawer(viewModel: WeatherViewModel) {
     val address by viewModel.addressState.collectAsState()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
-
     val pagerState = rememberPagerState(pageCount = { 3 })
 
     LaunchedEffect(Unit) {
@@ -159,7 +158,7 @@ fun WeatherLogicContainer(state: WeatherUiState, viewModel: WeatherViewModel) {
                 }
             }
             is WeatherUiState.Success -> {
-                CurrentWeatherScreen(state.data)
+                CurrentWeatherScreen(data = state.data, unit = state.unit)
             }
             is WeatherUiState.Error -> {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -177,9 +176,8 @@ fun WeatherLogicContainer(state: WeatherUiState, viewModel: WeatherViewModel) {
     }
 }
 
-
 @Composable
-fun CurrentWeatherScreen(data: FullWeatherData) {
+fun CurrentWeatherScreen(data: FullWeatherData, unit: String) {
     val current = data.current
     Column(
         modifier = Modifier.fillMaxSize().padding(16.dp),
@@ -196,7 +194,7 @@ fun CurrentWeatherScreen(data: FullWeatherData) {
             ) {
                 Icon(Icons.Default.WbSunny, null, modifier = Modifier.size(80.dp), tint = Color(0xFFFFC107))
                 Spacer(modifier = Modifier.height(8.dp))
-                Text("${current.main.temp.toInt()}°C", fontSize = 72.sp, fontWeight = FontWeight.Bold)
+                Text("${current.main.temp.toInt()}°$unit", fontSize = 72.sp, fontWeight = FontWeight.Bold)
                 Text(current.weather.firstOrNull()?.main ?: "Unknown", style = MaterialTheme.typography.headlineSmall)
             }
         }
@@ -222,7 +220,6 @@ fun FavoriteScreen() {
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Text("Favorite Locations", style = MaterialTheme.typography.headlineSmall)
         Spacer(modifier = Modifier.height(16.dp))
-        // Static Examples
         listOf("London", "New York", "Tokyo").forEach { city ->
             Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
                 ListItem(

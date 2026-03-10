@@ -11,10 +11,16 @@ class WeatherRepository(
 ) {
 
     suspend fun getHomeWeather(lat: Double, lon: Double, apiKey: String): Result<FullWeatherData> {
-        val units = preferenceManager.getTempUnit()
+        val selectedUnit = preferenceManager.getTempUnit()
 
-        val currentResult = remoteDataSource.getCurrentWeather(lat, lon, units, apiKey)
-        val forecastResult = remoteDataSource.getForecast(lat, lon, apiKey)
+        val apiUnit = when (selectedUnit) {
+            "C" -> "metric"
+            "F" -> "imperial"
+            else -> "metric"
+        }
+
+        val currentResult = remoteDataSource.getCurrentWeather(lat, lon, apiUnit, apiKey)
+        val forecastResult = remoteDataSource.getForecast(lat, lon, apiKey, apiUnit)
 
         return if (currentResult.isSuccess && forecastResult.isSuccess) {
             Result.success(
@@ -27,15 +33,18 @@ class WeatherRepository(
             val error = currentResult.exceptionOrNull() ?: forecastResult.exceptionOrNull()
             Result.failure(error ?: Exception(Constants.ERROR_FETCH_DATA))
         }
-
-
     }
 
+
+    fun getUserUnitSymbol(): String {
+        val unit = preferenceManager.getTempUnit()
+        return if (unit == "imperial" || unit == "F") "F" else "C"
+    }
     fun isFirstTimeUser(): Boolean {
         return preferenceManager.isFirstRun()
     }
 
-    fun saveInitialSetup(tempUnit: String, timeFormat: String, windUnit: String){
+    fun saveInitialSetup(tempUnit: String, timeFormat: String, windUnit: String) {
         preferenceManager.saveSettings(tempUnit, timeFormat, windUnit)
         preferenceManager.setFirstRun(false)
     }
