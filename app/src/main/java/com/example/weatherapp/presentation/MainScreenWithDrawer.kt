@@ -1,5 +1,7 @@
 package com.example.weatherapp.presentation
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -21,6 +23,7 @@ import androidx.compose.ui.unit.sp
 import com.example.weatherapp.data.models.home.FullWeatherData
 import kotlinx.coroutines.launch
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun MainScreenWithDrawer(viewModel: WeatherViewModel) {
@@ -75,14 +78,10 @@ fun MainScreenWithDrawer(viewModel: WeatherViewModel) {
             topBar = {
                 CenterAlignedTopAppBar(
                     title = {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(
-                                text = address.ifEmpty { "Detecting Location..." },
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                            Text("Current Location", style = MaterialTheme.typography.labelSmall)
-                        }
+
                     },
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                        containerColor = Color.Transparent),
                     navigationIcon = {
                         IconButton(onClick = { viewModel.onMenuClicked() }) {
                             Icon(Icons.Default.Menu, contentDescription = "Menu")
@@ -141,6 +140,7 @@ fun MainScreenWithDrawer(viewModel: WeatherViewModel) {
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun WeatherLogicContainer(state: WeatherUiState, viewModel: WeatherViewModel) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -176,44 +176,6 @@ fun WeatherLogicContainer(state: WeatherUiState, viewModel: WeatherViewModel) {
     }
 }
 
-@Composable
-fun CurrentWeatherScreen(data: FullWeatherData, unit: String) {
-    val current = data.current
-    Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Card(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
-            shape = RoundedCornerShape(32.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
-        ) {
-            Column(
-                modifier = Modifier.padding(32.dp).fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Icon(Icons.Default.WbSunny, null, modifier = Modifier.size(80.dp), tint = Color(0xFFFFC107))
-                Spacer(modifier = Modifier.height(8.dp))
-                Text("${current.main.temp.toInt()}°$unit", fontSize = 72.sp, fontWeight = FontWeight.Bold)
-                Text(current.weather.firstOrNull()?.main ?: "Unknown", style = MaterialTheme.typography.headlineSmall)
-            }
-        }
-
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-            WeatherDetailBox("Wind", "${current.wind.speed} km/h", Icons.Default.Air)
-            WeatherDetailBox("Humidity", "${current.main.humidity}%", Icons.Default.WaterDrop)
-        }
-    }
-}
-
-@Composable
-fun WeatherDetailBox(label: String, value: String, icon: androidx.compose.ui.graphics.vector.ImageVector) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Icon(icon, null, tint = MaterialTheme.colorScheme.primary)
-        Text(value, fontWeight = FontWeight.Bold)
-        Text(label, style = MaterialTheme.typography.labelMedium, color = Color.Gray)
-    }
-}
 
 @Composable
 fun FavoriteScreen() {
