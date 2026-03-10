@@ -30,4 +30,8 @@ class PreferenceManager(context: Context) {
             apply()
         }
     }
+
+    fun getTempUnit(): String = sharedPreferences.getString(KEY_TEMP_UNIT, "metric") ?: "metric"
+    fun getTimeFormat(): String = sharedPreferences.getString(KEY_TIME_FORMAT, "24h") ?: "24h"
+    fun getWindUnit(): String = sharedPreferences.getString(KEY_WIND_UNIT, "m/s") ?: "m/s"
 }

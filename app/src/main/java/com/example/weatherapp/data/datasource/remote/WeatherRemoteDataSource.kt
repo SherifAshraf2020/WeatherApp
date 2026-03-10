@@ -7,9 +7,9 @@ import com.example.weatherapp.data.network.Network
 class WeatherRemoteDataSource {
     private val weatherService: WeatherService = Network.weatherService
 
-    suspend fun getCurrentWeather(lat: Double, lon: Double, apiKey: String): Result<CurrentWeatherResponse> {
+    suspend fun getCurrentWeather(lat: Double, lon: Double, units: String, apiKey: String): Result<CurrentWeatherResponse> {
         return try {
-            val response = weatherService.getCurrentWeather(lat, lon, apiKey)
+            val response = weatherService.getCurrentWeather(lat, lon, apiKey, units)
             if (response.isSuccessful) {
                 val data = response.body() ?: throw Exception("Empty body")
                 Result.success(data)

@@ -11,8 +11,9 @@ class WeatherRepository(
 ) {
 
     suspend fun getHomeWeather(lat: Double, lon: Double, apiKey: String): Result<FullWeatherData> {
+        val units = preferenceManager.getTempUnit()
 
-        val currentResult = remoteDataSource.getCurrentWeather(lat, lon, apiKey)
+        val currentResult = remoteDataSource.getCurrentWeather(lat, lon, units, apiKey)
         val forecastResult = remoteDataSource.getForecast(lat, lon, apiKey)
 
         return if (currentResult.isSuccess && forecastResult.isSuccess) {
