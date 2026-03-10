@@ -92,4 +92,7 @@ dependencies {
 
     // --- Location Services ---
     implementation(libs.play.services.location)
+
+    // Image Loading Library (Coil) for Weather Icons
+    implementation(libs.coil.compose)
 }
