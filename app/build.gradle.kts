@@ -98,4 +98,8 @@ dependencies {
 
     // free OpenStreetMap Android Library for Android
     implementation(libs.osmdroid.android)
+
+    implementation(libs.play.services.maps)
+    implementation(libs.maps.compose)
+    implementation(libs.places)
 }
