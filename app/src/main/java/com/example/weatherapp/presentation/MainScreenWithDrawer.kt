@@ -19,17 +19,24 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import com.example.weatherapp.R
 import com.example.weatherapp.presentation.home.CurrentWeatherScreen
 import com.example.weatherapp.presentation.home.WeatherEvent
 import com.example.weatherapp.presentation.home.WeatherUiState
 import com.example.weatherapp.presentation.home.WeatherViewModel
+import com.example.weatherapp.presentation.favorites.FavoritesViewModel
+import com.example.weatherapp.presentation.favorites.FavoritesScreen
 import kotlinx.coroutines.launch
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun MainScreenWithDrawer(viewModel: WeatherViewModel) {
+fun MainScreenWithDrawer(
+    viewModel: WeatherViewModel,
+    favoritesViewModel: FavoritesViewModel,
+    navController: NavHostController
+) {
     val uiState by viewModel.uiState.collectAsState()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -78,23 +85,23 @@ fun MainScreenWithDrawer(viewModel: WeatherViewModel) {
     ) {
         Scaffold(
             topBar = {
-                CenterAlignedTopAppBar(
-                    title = { },
-                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                        containerColor = Color.Transparent
-                    ),
-                    navigationIcon = {
-                        IconButton(onClick = { viewModel.onMenuClicked() }) {
-                            Icon(Icons.Default.Menu, contentDescription = stringResource(id = R.string.menu_description))
+                if (pagerState.currentPage != 1) {
+                    CenterAlignedTopAppBar(
+                        title = { },
+                        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent),
+                        navigationIcon = {
+                            IconButton(onClick = { viewModel.onMenuClicked() }) {
+                                Icon(Icons.Default.Menu, contentDescription = null)
+                            }
                         }
-                    }
-                )
+                    )
+                }
             }
         ) { paddingValues ->
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues)
+                    .padding(if (pagerState.currentPage == 1) PaddingValues(0.dp) else paddingValues)
             ) {
                 HorizontalPager(
                     state = pagerState,
@@ -104,35 +111,43 @@ fun MainScreenWithDrawer(viewModel: WeatherViewModel) {
                 ) { page ->
                     when (page) {
                         0 -> WeatherLogicContainer(uiState, viewModel)
-                        1 -> FavoriteScreen()
+                        1 -> FavoritesScreen(
+                            viewModel = favoritesViewModel,
+                            onNavigateToMap = { navController.navigate("map_screen") },
+                            onNavigateToDetails = { lat, lon, city ->
+                                navController.navigate("details/$lat/$lon/$city")
+                            }
+                        )
                         2 -> AlertScreen()
                     }
                 }
 
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(60.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Row(
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
+                if (pagerState.currentPage != 1) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(60.dp),
+                        contentAlignment = Alignment.Center
                     ) {
-                        repeat(pagerState.pageCount) { iteration ->
-                            val isSelected = pagerState.currentPage == iteration
-                            val color = if (isSelected)
-                                MaterialTheme.colorScheme.primary else Color.LightGray
-
-                            Box(
-                                modifier = Modifier
-                                    .padding(6.dp)
-                                    .size(if (isSelected) 12.dp else 8.dp)
-                                    .background(color, shape = CircleShape)
-                                    .clickable {
-                                        scope.launch { pagerState.animateScrollToPage(iteration) }
-                                    }
-                            )
+                        Row(
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            repeat(pagerState.pageCount) { iteration ->
+                                val isSelected = pagerState.currentPage == iteration
+                                Box(
+                                    modifier = Modifier
+                                        .padding(6.dp)
+                                        .size(if (isSelected) 12.dp else 8.dp)
+                                        .background(
+                                            if (isSelected) MaterialTheme.colorScheme.primary else Color.LightGray,
+                                            shape = CircleShape
+                                        )
+                                        .clickable {
+                                            scope.launch { pagerState.animateScrollToPage(iteration) }
+                                        }
+                                )
+                            }
                         }
                     }
                 }
@@ -172,23 +187,6 @@ fun WeatherLogicContainer(state: WeatherUiState, viewModel: WeatherViewModel) {
             }
             else -> {
                 Text(stringResource(id = R.string.setup_incomplete))
-            }
-        }
-    }
-}
-
-@Composable
-fun FavoriteScreen() {
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        Text(stringResource(id = R.string.favorite_locations), style = MaterialTheme.typography.headlineSmall)
-        Spacer(modifier = Modifier.height(16.dp))
-        listOf("London", "New York", "Tokyo").forEach { city ->
-            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-                ListItem(
-                    headlineContent = { Text(city) },
-                    trailingContent = { Text("22°C", fontWeight = FontWeight.Bold) },
-                    leadingContent = { Icon(Icons.Default.LocationOn, null) }
-                )
             }
         }
     }

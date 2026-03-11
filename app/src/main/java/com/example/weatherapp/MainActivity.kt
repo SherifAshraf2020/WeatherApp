@@ -1,62 +1,81 @@
 package com.example.weatherapp
 
 import android.content.Context
+import android.os.Build
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.example.weatherapp.data.datasource.location.FusedLocationHelper
-import com.example.weatherapp.data.repository.WeatherRepository
 import com.example.weatherapp.data.datasource.local.PreferenceManager
+import com.example.weatherapp.data.datasource.local.WeatherLocalDataSource
 import com.example.weatherapp.data.datasource.remote.WeatherRemoteDataSource
+import com.example.weatherapp.data.db.WeatherDatabase
+import com.example.weatherapp.data.repository.WeatherRepository
 import com.example.weatherapp.presentation.*
-import com.example.weatherapp.presentation.home.WeatherEvent
-import com.example.weatherapp.presentation.home.WeatherUiState
-import com.example.weatherapp.presentation.home.WeatherViewModel
-import com.example.weatherapp.presentation.home.WeatherViewModelFactory
+import com.example.weatherapp.presentation.home.*
+import com.example.weatherapp.presentation.favorites.FavoritesViewModel
+import com.example.weatherapp.presentation.favorites.FavoritesViewModelFactory
 import com.example.weatherapp.ui.theme.WeatherAppTheme
 
 class MainActivity : ComponentActivity() {
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        val preferenceManager = PreferenceManager(applicationContext)
         val locationHelper = FusedLocationHelper(applicationContext)
-        val repository = WeatherRepository(WeatherRemoteDataSource(), PreferenceManager(applicationContext))
-        val factory = WeatherViewModelFactory(repository, locationHelper, applicationContext)
+        val database = WeatherDatabase.getDatabase(applicationContext)
+        val localDataSource = WeatherLocalDataSource(database.favoriteDao())
+
+        val repository = WeatherRepository(
+            remoteDataSource = WeatherRemoteDataSource(),
+            localDataSource = localDataSource,
+            preferenceManager = preferenceManager
+        )
+
+        val weatherFactory = WeatherViewModelFactory(repository, locationHelper, applicationContext)
+        val favoritesFactory = FavoritesViewModelFactory(repository)
 
         setContent {
             WeatherAppTheme {
-                val viewModel: WeatherViewModel = viewModel(factory = factory)
+                val navController = rememberNavController()
+                val weatherViewModel: WeatherViewModel = viewModel(factory = weatherFactory)
+                val favoritesViewModel: FavoritesViewModel = viewModel(factory = favoritesFactory)
 
                 val permissionLauncher = rememberLauncherForActivityResult(
                     contract = ActivityResultContracts.RequestMultiplePermissions()
                 ) { permissions ->
                     val isGranted = permissions.values.any { it }
-                    viewModel.checkStatusAndFetch(
+                    weatherViewModel.checkStatusAndFetch(
                         isPermissionGranted = isGranted,
                         isNetworkAvailable = isNetworkAvailable(),
                         isGpsEnabled = locationHelper.isLocationEnabled()
                     )
                 }
 
-                androidx.compose.runtime.LaunchedEffect(Unit) {
+                LaunchedEffect(Unit) {
                     val isGranted = checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED
-
-                    viewModel.checkStatusAndFetch(
+                    weatherViewModel.checkStatusAndFetch(
                         isPermissionGranted = isGranted,
                         isNetworkAvailable = isNetworkAvailable(),
                         isGpsEnabled = locationHelper.isLocationEnabled()
                     )
-
-                    viewModel.eventFlow.collect { event ->
+                    weatherViewModel.eventFlow.collect { event ->
                         when (event) {
                             is WeatherEvent.RequestLocationPermission -> {
                                 permissionLauncher.launch(arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION))
@@ -65,19 +84,26 @@ class MainActivity : ComponentActivity() {
                                 requestEnableGps()
                             }
                             is WeatherEvent.NetworkNotFound -> {
-                                android.widget.Toast.makeText(this@MainActivity, "No Internet Connection", android.widget.Toast.LENGTH_LONG).show()
+                                Toast.makeText(this@MainActivity, "No Internet Connection", Toast.LENGTH_LONG).show()
                             }
                             else -> {}
                         }
                     }
                 }
 
-                splashScreen.setKeepOnScreenCondition { viewModel.isSplashLoading.value }
+                splashScreen.setKeepOnScreenCondition { weatherViewModel.isSplashLoading.value }
 
-                val uiState by viewModel.uiState.collectAsState()
-                when (uiState) {
-                    is WeatherUiState.SetupRequired -> InitialSetupScreen(viewModel)
-                    else -> MainScreenWithDrawer(viewModel)
+                NavHost(navController = navController, startDestination = "home") {
+                    composable("home") {
+                        val uiState by weatherViewModel.uiState.collectAsState()
+                        when (uiState) {
+                            is WeatherUiState.SetupRequired -> InitialSetupScreen(weatherViewModel)
+                            else -> MainScreenWithDrawer(weatherViewModel, favoritesViewModel, navController)
+                        }
+                    }
+                    composable("map_screen") {
+                        // MapScreen(navController)
+                    }
                 }
             }
         }
@@ -101,6 +127,3 @@ class MainActivity : ComponentActivity() {
         return capabilities.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET)
     }
 }
-
-
-

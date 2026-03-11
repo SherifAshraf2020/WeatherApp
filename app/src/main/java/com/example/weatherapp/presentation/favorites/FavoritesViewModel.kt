@@ -1,6 +1,7 @@
 package com.example.weatherapp.presentation.favorites
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.weatherapp.data.datasource.local.entities.FavoriteEntity
 import com.example.weatherapp.data.repository.WeatherRepository
@@ -60,5 +61,14 @@ class FavoritesViewModel(private val repository: WeatherRepository) : ViewModel(
         viewModelScope.launch {
             repository.removeFromFavorites(favorite)
             _uiEvent.emit(FavoritesUiEvent.ShowToast(favorite.cityName))        }
+    }
+}
+
+@Suppress("UNCHECKED_CAST")
+class FavoritesViewModelFactory(
+    private val repository: WeatherRepository
+) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        return FavoritesViewModel(repository) as T
     }
 }
