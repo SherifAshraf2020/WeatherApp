@@ -22,6 +22,9 @@ gson = "2.13.2"
 roomCompiler = "2.8.4"
 roomVersion = "2.8.4"
 ksp = "2.3.4"
+nav_version = "2.9.7"
+kotlinxSerialization = "1.7.3"
+
 
 [libraries]
 androidx-compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
@@ -53,6 +56,9 @@ gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
 room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "roomVersion" }
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "roomCompiler" }
 room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "roomVersion" }
+androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "nav_version" }
+kotlinx-serialization = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
+
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
