@@ -16,8 +16,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.weatherapp.R
 import com.example.weatherapp.presentation.home.CurrentWeatherScreen
 import com.example.weatherapp.presentation.home.WeatherEvent
 import com.example.weatherapp.presentation.home.WeatherUiState
@@ -29,7 +31,6 @@ import kotlinx.coroutines.launch
 @Composable
 fun MainScreenWithDrawer(viewModel: WeatherViewModel) {
     val uiState by viewModel.uiState.collectAsState()
-    val address by viewModel.addressState.collectAsState()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     val pagerState = rememberPagerState(pageCount = { 3 })
@@ -48,26 +49,26 @@ fun MainScreenWithDrawer(viewModel: WeatherViewModel) {
             ModalDrawerSheet {
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    "Weather App",
+                    text = stringResource(id = R.string.app_name),
                     modifier = Modifier.padding(16.dp),
                     style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colorScheme.primary
                 )
                 HorizontalDivider()
                 NavigationDrawerItem(
-                    label = { Text("Home") },
+                    label = { Text(stringResource(id = R.string.menu_home)) },
                     selected = pagerState.currentPage == 0,
                     onClick = { scope.launch { pagerState.animateScrollToPage(0); drawerState.close() } },
                     icon = { Icon(Icons.Default.Home, null) }
                 )
                 NavigationDrawerItem(
-                    label = { Text("Favorites") },
+                    label = { Text(stringResource(id = R.string.favorite_locations)) },
                     selected = pagerState.currentPage == 1,
                     onClick = { scope.launch { pagerState.animateScrollToPage(1); drawerState.close() } },
                     icon = { Icon(Icons.Default.Favorite, null) }
                 )
                 NavigationDrawerItem(
-                    label = { Text("Alerts") },
+                    label = { Text(stringResource(id = R.string.menu_alerts)) },
                     selected = pagerState.currentPage == 2,
                     onClick = { scope.launch { pagerState.animateScrollToPage(2); drawerState.close() } },
                     icon = { Icon(Icons.Default.Notifications, null) }
@@ -78,14 +79,13 @@ fun MainScreenWithDrawer(viewModel: WeatherViewModel) {
         Scaffold(
             topBar = {
                 CenterAlignedTopAppBar(
-                    title = {
-
-                    },
+                    title = { },
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                        containerColor = Color.Transparent),
+                        containerColor = Color.Transparent
+                    ),
                     navigationIcon = {
                         IconButton(onClick = { viewModel.onMenuClicked() }) {
-                            Icon(Icons.Default.Menu, contentDescription = "Menu")
+                            Icon(Icons.Default.Menu, contentDescription = stringResource(id = R.string.menu_description))
                         }
                     }
                 )
@@ -152,9 +152,9 @@ fun WeatherLogicContainer(state: WeatherUiState, viewModel: WeatherViewModel) {
             is WeatherUiState.PermissionRequired -> {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(Icons.Default.LocationOff, null, modifier = Modifier.size(64.dp), tint = Color.Gray)
-                    Text("Location Permission Needed", modifier = Modifier.padding(16.dp))
+                    Text(stringResource(id = R.string.permission_needed), modifier = Modifier.padding(16.dp))
                     Button(onClick = { viewModel.startGettingLocation() }) {
-                        Text("Grant Permission")
+                        Text(stringResource(id = R.string.btn_grant_permission))
                     }
                 }
             }
@@ -164,24 +164,23 @@ fun WeatherLogicContainer(state: WeatherUiState, viewModel: WeatherViewModel) {
             is WeatherUiState.Error -> {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(Icons.Default.CloudOff, null, modifier = Modifier.size(48.dp), tint = Color.Gray)
-                    Text("Error: ${state.message}", color = Color.Red, modifier = Modifier.padding(16.dp))
+                    Text("${stringResource(id = R.string.error_prefix)} ${state.message}", color = Color.Red, modifier = Modifier.padding(16.dp))
                     Button(onClick = { viewModel.startGettingLocation() }) {
-                        Text("Retry")
+                        Text(stringResource(id = R.string.btn_retry))
                     }
                 }
             }
             else -> {
-                Text("Please complete the setup or check permissions")
+                Text(stringResource(id = R.string.setup_incomplete))
             }
         }
     }
 }
 
-
 @Composable
 fun FavoriteScreen() {
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        Text("Favorite Locations", style = MaterialTheme.typography.headlineSmall)
+        Text(stringResource(id = R.string.favorite_locations), style = MaterialTheme.typography.headlineSmall)
         Spacer(modifier = Modifier.height(16.dp))
         listOf("London", "New York", "Tokyo").forEach { city ->
             Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
@@ -200,7 +199,7 @@ fun AlertScreen() {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Icon(Icons.Default.NotificationsNone, null, modifier = Modifier.size(64.dp), tint = Color.LightGray)
-            Text("No Active Alerts", style = MaterialTheme.typography.bodyLarge, color = Color.Gray)
+            Text(stringResource(id = R.string.no_alerts_text), style = MaterialTheme.typography.bodyLarge, color = Color.Gray)
         }
     }
 }

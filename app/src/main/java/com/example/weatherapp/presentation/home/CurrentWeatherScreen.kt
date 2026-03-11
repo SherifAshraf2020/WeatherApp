@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -66,7 +67,7 @@ fun CurrentWeatherScreen(data: FullWeatherData, unit: String) {
 
             item {
                 Text(
-                    "Hourly Forecast",
+                    text = stringResource(id = R.string.hourly_forecast),
                     color = Color.White,
                     modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
                 )
@@ -75,7 +76,7 @@ fun CurrentWeatherScreen(data: FullWeatherData, unit: String) {
 
             item {
                 Text(
-                    "Next 5 Days",
+                    text = stringResource(id = R.string.next_5_days),
                     color = Color.White,
                     modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
                 )
@@ -102,6 +103,7 @@ fun MainWeatherHeader(
     dateTime: LocalDateTime,
     unit: String
 ) {
+    val locale = Locale.getDefault()
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Default.LocationOn, null, tint = Color.White, modifier = Modifier.size(18.dp))
@@ -121,11 +123,11 @@ fun MainWeatherHeader(
         ) {
             Column {
                 Text(
-                    dateTime.format(DateTimeFormatter.ofPattern("EEEE, dd MMM", Locale.ENGLISH)),
+                    text = dateTime.format(DateTimeFormatter.ofPattern("EEEE, dd MMM", locale)),
                     color = Color.White.copy(0.7f)
                 )
                 Text(
-                    dateTime.format(DateTimeFormatter.ofPattern("HH:mm")),
+                    text = dateTime.format(DateTimeFormatter.ofPattern("HH:mm")),
                     color = Color.White,
                     fontSize = 54.sp,
                     fontWeight = FontWeight.Bold
@@ -133,16 +135,16 @@ fun MainWeatherHeader(
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    "${current.main.temp.toInt()}",
+                    text = "${current.main.temp.toInt()}",
                     color = Color.White,
                     fontSize = 80.sp,
                     fontWeight = FontWeight.W100
                 )
                 Column {
-                    Text("°$unit", color = Color.White, fontSize = 24.sp)
+                    Text(text = "°$unit", color = Color.White, fontSize = 24.sp)
                     Icon(
-                        getWeatherIcon(current.weather.firstOrNull()?.main),
-                        null,
+                        imageVector = getWeatherIcon(current.weather.firstOrNull()?.main),
+                        contentDescription = null,
                         tint = Color.White,
                         modifier = Modifier.size(38.dp)
                     )
@@ -161,10 +163,10 @@ fun WeatherExtraDetails(current: CurrentWeatherResponse) {
         border = BorderStroke(0.5.dp, Color.White.copy(0.1f))
     ) {
         Row(modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-            DetailItem("Wind", "${current.wind.speed} km/h", Icons.Rounded.Air)
-            DetailItem("Humidity", "${current.main.humidity}%", Icons.Rounded.WaterDrop)
-            DetailItem("Pressure", "${current.main.pressure}", Icons.Rounded.Compress)
-            DetailItem("Clouds", "${current.clouds.all}%", Icons.Rounded.Cloud)
+            DetailItem(stringResource(id = R.string.wind_label), "${current.wind.speed} ${stringResource(id = R.string.wind_unit_kmh)}", Icons.Rounded.Air)
+            DetailItem(stringResource(id = R.string.humidity_label), "${current.main.humidity}%", Icons.Rounded.WaterDrop)
+            DetailItem(stringResource(id = R.string.pressure_label), "${current.main.pressure}", Icons.Rounded.Compress)
+            DetailItem(stringResource(id = R.string.clouds_label), "${current.clouds.all}%", Icons.Rounded.Cloud)
         }
     }
 }
@@ -206,6 +208,7 @@ fun HourlyForecastCard(list: List<ForecastItem>) {
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun DailyForecastCard(list: List<ForecastItem>) {
+    val locale = Locale.getDefault()
     Surface(
         modifier = Modifier.fillMaxWidth(),
         color = Color.Black.copy(0.3f),
@@ -219,7 +222,7 @@ fun DailyForecastCard(list: List<ForecastItem>) {
                 val date = LocalDateTime.parse(day.dtTxt, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        date.format(DateTimeFormatter.ofPattern("EEE", Locale.ENGLISH)),
+                        text = date.format(DateTimeFormatter.ofPattern("EEE", locale)),
                         color = Color.White.copy(0.7f),
                         fontSize = 12.sp
                     )

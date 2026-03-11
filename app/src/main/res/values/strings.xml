@@ -1,4 +1,42 @@
 <resources>
     <string name="app_name">Weather App</string>
     <string name="error_fetch_data">Failed to fetch data</string>
+
+    <string name="settings_header">SETTING</string>
+    <string name="temp_label">Temperature</string>
+    <string name="time_label">Time format</string>
+    <string name="wind_label">Wind speed</string>
+    <string name="notif_label">Notification</string>
+    <string name="status_label">Status bar</string>
+    <string name="btn_done">DONE</string>
+    <string name="btn_cancel">CANCEL</string>
+    <string name="wind_dialog_title">Choose Wind Speed unit</string>
+    <string name="unit_f">F</string>
+    <string name="unit_c">C</string>
+    <string name="unit_12h">12</string>
+    <string name="unit_24h">24</string>
+
+
+    <string name="menu_home">Home</string>
+    <string name="menu_alerts">Alerts</string>
+    <string name="menu_description">Menu</string>
+    <string name="permission_needed">Location Permission Needed</string>
+    <string name="btn_grant_permission">Grant Permission</string>
+    <string name="btn_retry">Retry</string>
+    <string name="error_prefix">Error:</string>
+    <string name="setup_incomplete">Please complete the setup or check permissions</string>
+    <string name="no_alerts_text">No Active Alerts</string>
+
+
+    <string name="hourly_forecast">Hourly Forecast</string>
+    <string name="next_5_days">Next 5 Days</string>
+    <string name="humidity_label">Humidity</string>
+    <string name="pressure_label">Pressure</string>
+    <string name="clouds_label">Clouds</string>
+    <string name="wind_unit_kmh">km/h</string>
+
+    <string name="favorite_locations">Favorite Locations</string>
+    <string name="add_location">Add Location</string>
+    <string name="delete_location">Delete</string>
+    <string name="no_favorites_found">No favorites saved yet</string>
 </resources>

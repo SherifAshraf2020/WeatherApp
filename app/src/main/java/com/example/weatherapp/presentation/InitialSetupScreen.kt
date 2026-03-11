@@ -1,5 +1,6 @@
 package com.example.weatherapp.presentation
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -18,9 +19,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.weatherapp.R
 import com.example.weatherapp.presentation.home.WeatherViewModel
 
 @Composable
@@ -55,7 +59,7 @@ fun InitialSetupScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "SETTING",
+                        text = stringResource(id = R.string.settings_header),
                         color = Color.White,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 2.sp
@@ -65,8 +69,8 @@ fun InitialSetupScreen(
                 Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
                     SettingRow(
                         icon = Icons.Default.WbSunny,
-                        title = "Temperature",
-                        options = listOf("F", "C"),
+                        title = stringResource(id = R.string.temp_label),
+                        options = listOf(stringResource(id = R.string.unit_f), stringResource(id = R.string.unit_c)),
                         initialIndex = 1,
                         onOptionSelected = { selectedTempUnit = it }
                     )
@@ -74,8 +78,8 @@ fun InitialSetupScreen(
 
                     SettingRow(
                         icon = Icons.Default.Schedule,
-                        title = "Time format",
-                        options = listOf("12", "24"),
+                        title = stringResource(id = R.string.time_label),
+                        options = listOf(stringResource(id = R.string.unit_12h), stringResource(id = R.string.unit_24h)),
                         initialIndex = 1,
                         onOptionSelected = { selectedTimeFormat = it }
                     )
@@ -92,7 +96,7 @@ fun InitialSetupScreen(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.Flag, null, tint = Color.LightGray, modifier = Modifier.size(20.dp))
                             Spacer(modifier = Modifier.width(12.dp))
-                            Text(text = "Wind speed", color = Color.White, fontSize = 16.sp)
+                            Text(text = stringResource(id = R.string.wind_label), color = Color.White, fontSize = 16.sp)
                         }
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(text = selectedWindUnit, color = Color.Gray, fontSize = 14.sp)
@@ -101,9 +105,9 @@ fun InitialSetupScreen(
                     }
                     HorizontalDivider(color = Color.DarkGray, thickness = 0.5.dp)
 
-                    SwitchRow(icon = Icons.Default.Notifications, title = "Notification")
+                    SwitchRow(icon = Icons.Default.Notifications, title = stringResource(id = R.string.notif_label))
                     HorizontalDivider(color = Color.DarkGray, thickness = 0.5.dp)
-                    SwitchRow(icon = Icons.Default.Thermostat, title = "Status bar")
+                    SwitchRow(icon = Icons.Default.Thermostat, title = stringResource(id = R.string.status_label))
                 }
 
                 Button(
@@ -121,7 +125,7 @@ fun InitialSetupScreen(
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1A1A1A)),
                     shape = RoundedCornerShape(4.dp)
                 ) {
-                    Text("DONE", color = Color.White)
+                    Text(text = stringResource(id = R.string.btn_done), color = Color.White)
                 }
             }
         }
@@ -129,7 +133,7 @@ fun InitialSetupScreen(
         if (showWindDialog) {
             AlertDialog(
                 onDismissRequest = { showWindDialog = false },
-                title = { Text("Choose Wind Speed unit", fontWeight = FontWeight.Bold) },
+                title = { Text(text = stringResource(id = R.string.wind_dialog_title), fontWeight = FontWeight.Bold) },
                 text = {
                     val units = listOf("mph", "km/h", "m/s", "knots", "ft/s")
                     Column {
@@ -152,7 +156,7 @@ fun InitialSetupScreen(
                 },
                 confirmButton = {
                     TextButton(onClick = { showWindDialog = false }) {
-                        Text("CANCEL", color = Color(0xFF00ACC1))
+                        Text(text = stringResource(id = R.string.btn_cancel), color = Color(0xFF00ACC1))
                     }
                 }
             )
