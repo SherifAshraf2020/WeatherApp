@@ -35,8 +35,10 @@
     <string name="clouds_label">Clouds</string>
     <string name="wind_unit_kmh">km/h</string>
 
+
     <string name="favorite_locations">Favorite Locations</string>
     <string name="add_location">Add Location</string>
     <string name="delete_location">Delete</string>
+    <string name="removed_message">%s removed from favorites</string>
     <string name="no_favorites_found">No favorites saved yet</string>
 </resources>

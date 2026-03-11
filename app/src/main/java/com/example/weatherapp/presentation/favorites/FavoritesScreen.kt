@@ -41,8 +41,8 @@ fun FavoritesScreen(
                     onNavigateToDetails(event.lat, event.lon, event.cityName)
                 }
                 is FavoritesUiEvent.ShowToast -> {
-                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
-                }
+                    val message = context.getString(R.string.removed_message, event.message)
+                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()                }
             }
         }
     }

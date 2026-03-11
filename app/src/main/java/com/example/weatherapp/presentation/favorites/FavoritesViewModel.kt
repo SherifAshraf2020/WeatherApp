@@ -59,7 +59,6 @@ class FavoritesViewModel(private val repository: WeatherRepository) : ViewModel(
     fun onDeleteLocation(favorite: FavoriteEntity) {
         viewModelScope.launch {
             repository.removeFromFavorites(favorite)
-            _uiEvent.emit(FavoritesUiEvent.ShowToast("${favorite.cityName} removed from favorites"))
-        }
+            _uiEvent.emit(FavoritesUiEvent.ShowToast(favorite.cityName))        }
     }
 }
