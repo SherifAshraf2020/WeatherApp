@@ -16,6 +16,10 @@ import com.example.weatherapp.data.repository.WeatherRepository
 import com.example.weatherapp.data.datasource.local.PreferenceManager
 import com.example.weatherapp.data.datasource.remote.WeatherRemoteDataSource
 import com.example.weatherapp.presentation.*
+import com.example.weatherapp.presentation.home.WeatherEvent
+import com.example.weatherapp.presentation.home.WeatherUiState
+import com.example.weatherapp.presentation.home.WeatherViewModel
+import com.example.weatherapp.presentation.home.WeatherViewModelFactory
 import com.example.weatherapp.ui.theme.WeatherAppTheme
 
 class MainActivity : ComponentActivity() {

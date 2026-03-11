@@ -1,4 +1,4 @@
-package com.example.weatherapp.presentation
+package com.example.weatherapp.presentation.home
 
 import android.content.Context
 import android.location.Geocoder

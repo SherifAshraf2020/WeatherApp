@@ -1,4 +1,4 @@
-package com.example.weatherapp.presentation
+package com.example.weatherapp.presentation.home
 
 import android.os.Build
 import androidx.annotation.RequiresApi
@@ -26,6 +26,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.weatherapp.R
+import com.example.weatherapp.data.models.current.CurrentWeatherResponse
+import com.example.weatherapp.data.models.forecast.ForecastItem
 import com.example.weatherapp.data.models.home.FullWeatherData
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -96,7 +98,7 @@ fun CurrentWeatherScreen(data: FullWeatherData, unit: String) {
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun MainWeatherHeader(
-    current: com.example.weatherapp.data.models.current.CurrentWeatherResponse,
+    current: CurrentWeatherResponse,
     dateTime: LocalDateTime,
     unit: String
 ) {
@@ -151,7 +153,7 @@ fun MainWeatherHeader(
 }
 
 @Composable
-fun WeatherExtraDetails(current: com.example.weatherapp.data.models.current.CurrentWeatherResponse) {
+fun WeatherExtraDetails(current: CurrentWeatherResponse) {
     Surface(
         modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
         color = Color.Black.copy(0.25f),
@@ -179,7 +181,7 @@ fun DetailItem(label: String, value: String, icon: ImageVector) {
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun HourlyForecastCard(list: List<com.example.weatherapp.data.models.forecast.ForecastItem>) {
+fun HourlyForecastCard(list: List<ForecastItem>) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         color = Color.Black.copy(0.3f),
@@ -203,7 +205,7 @@ fun HourlyForecastCard(list: List<com.example.weatherapp.data.models.forecast.Fo
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun DailyForecastCard(list: List<com.example.weatherapp.data.models.forecast.ForecastItem>) {
+fun DailyForecastCard(list: List<ForecastItem>) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         color = Color.Black.copy(0.3f),
