@@ -85,23 +85,21 @@ fun MainScreenWithDrawer(
     ) {
         Scaffold(
             topBar = {
-                if (pagerState.currentPage != 1) {
-                    CenterAlignedTopAppBar(
-                        title = { },
-                        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent),
-                        navigationIcon = {
-                            IconButton(onClick = { viewModel.onMenuClicked() }) {
-                                Icon(Icons.Default.Menu, contentDescription = null)
-                            }
+                CenterAlignedTopAppBar(
+                    title = { },
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent),
+                    navigationIcon = {
+                        IconButton(onClick = { viewModel.onMenuClicked() }) {
+                            Icon(Icons.Default.Menu, contentDescription = null)
                         }
-                    )
-                }
+                    }
+                )
             }
         ) { paddingValues ->
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(if (pagerState.currentPage == 1) PaddingValues(0.dp) else paddingValues)
+                    .padding(paddingValues)
             ) {
                 HorizontalPager(
                     state = pagerState,
@@ -122,32 +120,30 @@ fun MainScreenWithDrawer(
                     }
                 }
 
-                if (pagerState.currentPage != 1) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(60.dp),
-                        contentAlignment = Alignment.Center
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(60.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            repeat(pagerState.pageCount) { iteration ->
-                                val isSelected = pagerState.currentPage == iteration
-                                Box(
-                                    modifier = Modifier
-                                        .padding(6.dp)
-                                        .size(if (isSelected) 12.dp else 8.dp)
-                                        .background(
-                                            if (isSelected) MaterialTheme.colorScheme.primary else Color.LightGray,
-                                            shape = CircleShape
-                                        )
-                                        .clickable {
-                                            scope.launch { pagerState.animateScrollToPage(iteration) }
-                                        }
-                                )
-                            }
+                        repeat(pagerState.pageCount) { iteration ->
+                            val isSelected = pagerState.currentPage == iteration
+                            Box(
+                                modifier = Modifier
+                                    .padding(6.dp)
+                                    .size(if (isSelected) 12.dp else 8.dp)
+                                    .background(
+                                        if (isSelected) MaterialTheme.colorScheme.primary else Color.LightGray,
+                                        shape = CircleShape
+                                    )
+                                    .clickable {
+                                        scope.launch { pagerState.animateScrollToPage(iteration) }
+                                    }
+                            )
                         }
                     }
                 }
