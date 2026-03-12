@@ -113,9 +113,10 @@ fun MainScreenWithDrawer(
                             viewModel = favoritesViewModel,
                             onNavigateToMap = { navController.navigate("map_screen") },
                             onNavigateToDetails = { lat, lon, city ->
-                                navController.navigate("details/$lat/$lon/$city")
+                                navController.navigate("weather_details/$lat/$lon/$city")
                             }
                         )
+
                         2 -> AlertScreen()
                     }
                 }
@@ -160,27 +161,48 @@ fun WeatherLogicContainer(state: WeatherUiState, viewModel: WeatherViewModel) {
             is WeatherUiState.Loading -> {
                 CircularProgressIndicator()
             }
+
             is WeatherUiState.PermissionRequired -> {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(Icons.Default.LocationOff, null, modifier = Modifier.size(64.dp), tint = Color.Gray)
-                    Text(stringResource(id = R.string.permission_needed), modifier = Modifier.padding(16.dp))
+                    Icon(
+                        Icons.Default.LocationOff,
+                        null,
+                        modifier = Modifier.size(64.dp),
+                        tint = Color.Gray
+                    )
+                    Text(
+                        stringResource(id = R.string.permission_needed),
+                        modifier = Modifier.padding(16.dp)
+                    )
                     Button(onClick = { viewModel.startGettingLocation() }) {
                         Text(stringResource(id = R.string.btn_grant_permission))
                     }
                 }
             }
+
             is WeatherUiState.Success -> {
                 CurrentWeatherScreen(data = state.data, unit = state.unit)
             }
+
             is WeatherUiState.Error -> {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(Icons.Default.CloudOff, null, modifier = Modifier.size(48.dp), tint = Color.Gray)
-                    Text("${stringResource(id = R.string.error_prefix)} ${state.message}", color = Color.Red, modifier = Modifier.padding(16.dp))
+                    Icon(
+                        Icons.Default.CloudOff,
+                        null,
+                        modifier = Modifier.size(48.dp),
+                        tint = Color.Gray
+                    )
+                    Text(
+                        "${stringResource(id = R.string.error_prefix)} ${state.message}",
+                        color = Color.Red,
+                        modifier = Modifier.padding(16.dp)
+                    )
                     Button(onClick = { viewModel.startGettingLocation() }) {
                         Text(stringResource(id = R.string.btn_retry))
                     }
                 }
             }
+
             else -> {
                 Text(stringResource(id = R.string.setup_incomplete))
             }
@@ -192,8 +214,17 @@ fun WeatherLogicContainer(state: WeatherUiState, viewModel: WeatherViewModel) {
 fun AlertScreen() {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(Icons.Default.NotificationsNone, null, modifier = Modifier.size(64.dp), tint = Color.LightGray)
-            Text(stringResource(id = R.string.no_alerts_text), style = MaterialTheme.typography.bodyLarge, color = Color.Gray)
+            Icon(
+                Icons.Default.NotificationsNone,
+                null,
+                modifier = Modifier.size(64.dp),
+                tint = Color.LightGray
+            )
+            Text(
+                stringResource(id = R.string.no_alerts_text),
+                style = MaterialTheme.typography.bodyLarge,
+                color = Color.Gray
+            )
         }
     }
 }

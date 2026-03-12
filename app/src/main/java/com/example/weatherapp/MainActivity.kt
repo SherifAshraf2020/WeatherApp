@@ -25,6 +25,7 @@ import com.example.weatherapp.data.datasource.remote.WeatherRemoteDataSource
 import com.example.weatherapp.data.db.WeatherDatabase
 import com.example.weatherapp.data.repository.WeatherRepository
 import com.example.weatherapp.presentation.*
+import com.example.weatherapp.presentation.FavoriteDetailsScreen.FavoriteDetailsScreen
 import com.example.weatherapp.presentation.home.*
 import com.example.weatherapp.presentation.favorites.FavoritesViewModel
 import com.example.weatherapp.presentation.favorites.FavoritesViewModelFactory
@@ -111,16 +112,18 @@ class MainActivity : ComponentActivity() {
                             else -> MainScreenWithDrawer(weatherViewModel, favoritesViewModel, navController)
                         }
                     }
+
+                    composable("weather_details/{lat}/{lon}/{city}") { backStackEntry ->
+                        val lat = backStackEntry.arguments?.getString("lat")?.toDoubleOrNull() ?: 0.0
+                        val lon = backStackEntry.arguments?.getString("lon")?.toDoubleOrNull() ?: 0.0
+                        val city = backStackEntry.arguments?.getString("city") ?: ""
+
+                        FavoriteDetailsScreen(lat, lon, city, repository, onBack = { navController.popBackStack() })
+                    }
+
                     composable("map_screen") {
-                        val mapViewModel: MapViewModel = viewModel(
-                            factory = MapViewModelFactory(repository)
-                        )
-                        MapScreen(
-                            viewModel = mapViewModel,
-                            onLocationSaved = {
-                                navController.popBackStack()
-                            }
-                        )
+                        val mapViewModel: MapViewModel = viewModel(factory = MapViewModelFactory(repository))
+                        MapScreen(viewModel = mapViewModel, onLocationSaved = { navController.popBackStack() })
                     }
                 }
             }
