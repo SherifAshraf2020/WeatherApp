@@ -37,7 +37,12 @@ import java.util.Locale
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun CurrentWeatherScreen(data: FullWeatherData, unit: String) {
+fun CurrentWeatherScreen(
+    data: FullWeatherData,
+    unit: String,
+    timeFormat: String,
+    windUnit: String
+) {
     val current = data.current
     val currentDateTime = LocalDateTime.now()
     val todayDate = LocalDate.now()
@@ -58,11 +63,11 @@ fun CurrentWeatherScreen(data: FullWeatherData, unit: String) {
         ) {
             item {
                 Spacer(modifier = Modifier.height(60.dp))
-                MainWeatherHeader(current, currentDateTime, unit)
+                MainWeatherHeader(current, currentDateTime, unit, timeFormat)
             }
 
             item {
-                WeatherExtraDetails(current)
+                WeatherExtraDetails(current, windUnit)
             }
 
             item {
@@ -71,7 +76,7 @@ fun CurrentWeatherScreen(data: FullWeatherData, unit: String) {
                     color = Color.White,
                     modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
                 )
-                HourlyForecastCard(data.forecast.list.take(8))
+                HourlyForecastCard(data.forecast.list.take(8), timeFormat)
             }
 
             item {
@@ -101,9 +106,13 @@ fun CurrentWeatherScreen(data: FullWeatherData, unit: String) {
 fun MainWeatherHeader(
     current: CurrentWeatherResponse,
     dateTime: LocalDateTime,
-    unit: String
+    unit: String,
+    timeFormat: String
 ) {
     val locale = Locale.getDefault()
+    val is12h = timeFormat.contains("12")
+    val timePattern = if (is12h) "hh:mm a" else "HH:mm"
+
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Default.LocationOn, null, tint = Color.White, modifier = Modifier.size(18.dp))
@@ -127,7 +136,7 @@ fun MainWeatherHeader(
                     color = Color.White.copy(0.7f)
                 )
                 Text(
-                    text = dateTime.format(DateTimeFormatter.ofPattern("HH:mm")),
+                    text = dateTime.format(DateTimeFormatter.ofPattern(timePattern, locale)),
                     color = Color.White,
                     fontSize = 54.sp,
                     fontWeight = FontWeight.Bold
@@ -155,7 +164,7 @@ fun MainWeatherHeader(
 }
 
 @Composable
-fun WeatherExtraDetails(current: CurrentWeatherResponse) {
+fun WeatherExtraDetails(current: CurrentWeatherResponse, windUnit: String) {
     Surface(
         modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
         color = Color.Black.copy(0.25f),
@@ -163,7 +172,7 @@ fun WeatherExtraDetails(current: CurrentWeatherResponse) {
         border = BorderStroke(0.5.dp, Color.White.copy(0.1f))
     ) {
         Row(modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-            DetailItem(stringResource(id = R.string.wind_label), "${current.wind.speed} ${stringResource(id = R.string.wind_unit_kmh)}", Icons.Rounded.Air)
+            DetailItem(stringResource(id = R.string.wind_label), "${current.wind.speed} $windUnit", Icons.Rounded.Air)
             DetailItem(stringResource(id = R.string.humidity_label), "${current.main.humidity}%", Icons.Rounded.WaterDrop)
             DetailItem(stringResource(id = R.string.pressure_label), "${current.main.pressure}", Icons.Rounded.Compress)
             DetailItem(stringResource(id = R.string.clouds_label), "${current.clouds.all}%", Icons.Rounded.Cloud)
@@ -183,7 +192,9 @@ fun DetailItem(label: String, value: String, icon: ImageVector) {
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun HourlyForecastCard(list: List<ForecastItem>) {
+fun HourlyForecastCard(list: List<ForecastItem>, timeFormat: String) {
+    val is12h = timeFormat.contains("12")
+    val timePattern = if (is12h) "h a" else "HH:mm"
     Surface(
         modifier = Modifier.fillMaxWidth(),
         color = Color.Black.copy(0.3f),
@@ -196,7 +207,7 @@ fun HourlyForecastCard(list: List<ForecastItem>) {
             items(list) { hour ->
                 val time = LocalDateTime.parse(hour.dtTxt, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(time.format(DateTimeFormatter.ofPattern("HH:mm")), color = Color.White, fontSize = 12.sp)
+                    Text(time.format(DateTimeFormatter.ofPattern(timePattern)), color = Color.White, fontSize = 12.sp)
                     Icon(getWeatherIcon(hour.weather.firstOrNull()?.main), null, tint = Color.White, modifier = Modifier.size(26.dp))
                     Text("${hour.main.temp.toInt()}°", color = Color.White, fontWeight = FontWeight.Bold)
                 }

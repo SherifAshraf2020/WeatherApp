@@ -181,7 +181,12 @@ fun WeatherLogicContainer(state: WeatherUiState, viewModel: WeatherViewModel) {
             }
 
             is WeatherUiState.Success -> {
-                CurrentWeatherScreen(data = state.data, unit = state.unit)
+                CurrentWeatherScreen(
+                    data = state.data,
+                    unit = state.unit,
+                    timeFormat = state.timeFormat,
+                    windUnit = state.windUnit
+                )
             }
 
             is WeatherUiState.Error -> {

@@ -149,9 +149,16 @@ class WeatherViewModel
     private fun fetchWeather(lat: Double, lon: Double) {
         viewModelScope.launch {
             val unitSymbol = repository.getUserUnitSymbol()
+            val timeFormat = repository.getSavedTimeFormat()
+            val windUnit = repository.getSavedWindUnit()
             repository.getHomeWeather(lat, lon, BuildConfig.API_KEY)
                 .onSuccess { data ->
-                    _uiState.value = WeatherUiState.Success(processWeatherData(data), unitSymbol)
+                    _uiState.value = WeatherUiState.Success(
+                        processWeatherData(data),
+                        unitSymbol,
+                        timeFormat,
+                        windUnit
+                    )
                     isSplashLoading.value = false
                 }.onFailure {
                     _uiState.value = WeatherUiState.Error("Failed to load weather")

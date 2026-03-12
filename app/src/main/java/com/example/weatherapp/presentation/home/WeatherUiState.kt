@@ -6,6 +6,11 @@ sealed class WeatherUiState {
     object Loading : WeatherUiState()
     object SetupRequired : WeatherUiState()
     object PermissionRequired : WeatherUiState()
-    data class Success(val data: FullWeatherData, val unit: String) : WeatherUiState()
+    data class Success(
+        val data: FullWeatherData,
+        val unit: String,
+        val timeFormat: String,
+        val windUnit: String
+    ) : WeatherUiState()
     data class Error(val message: String) : WeatherUiState()
 }

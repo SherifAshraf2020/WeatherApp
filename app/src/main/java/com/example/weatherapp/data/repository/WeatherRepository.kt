@@ -67,4 +67,12 @@ class WeatherRepository(
         preferenceManager.saveSettings(tempUnit, timeFormat, windUnit)
         preferenceManager.setFirstRun(false)
     }
+
+    fun getSavedTimeFormat(): String {
+        return preferenceManager.getTimeFormat()
+    }
+
+    fun getSavedWindUnit(): String {
+        return preferenceManager.getWindUnit()
+    }
 }

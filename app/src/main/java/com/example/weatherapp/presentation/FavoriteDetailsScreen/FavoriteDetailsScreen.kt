@@ -62,7 +62,12 @@ fun FavoriteDetailsScreen(
                 Text(text = errorMessage!!, modifier = Modifier.align(Alignment.Center), color = Color.Red)
             } else {
                 weatherData?.let { data ->
-                    CurrentWeatherScreen(data = data, unit = repository.getUserUnitSymbol())
+                    CurrentWeatherScreen(
+                        data = data,
+                        unit = repository.getUserUnitSymbol(),
+                        timeFormat = repository.getSavedTimeFormat(),
+                        windUnit = repository.getSavedWindUnit()
+                    )
                 }
             }
         }
