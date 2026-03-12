@@ -28,13 +28,23 @@ import com.example.weatherapp.presentation.*
 import com.example.weatherapp.presentation.home.*
 import com.example.weatherapp.presentation.favorites.FavoritesViewModel
 import com.example.weatherapp.presentation.favorites.FavoritesViewModelFactory
+import com.example.weatherapp.presentation.map.MapScreen
+import com.example.weatherapp.presentation.map.MapViewModel
+import com.example.weatherapp.presentation.map.MapViewModelFactory
 import com.example.weatherapp.ui.theme.WeatherAppTheme
+import org.osmdroid.config.Configuration
 
 class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
+
+        Configuration.getInstance().load(
+            this,
+            android.preference.PreferenceManager.getDefaultSharedPreferences(this)
+        )
+
         enableEdgeToEdge()
 
         val preferenceManager = PreferenceManager(applicationContext)
@@ -102,7 +112,15 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                     composable("map_screen") {
-                        // MapScreen(navController)
+                        val mapViewModel: MapViewModel = viewModel(
+                            factory = MapViewModelFactory(repository)
+                        )
+                        MapScreen(
+                            viewModel = mapViewModel,
+                            onLocationSaved = {
+                                navController.popBackStack()
+                            }
+                        )
                     }
                 }
             }
