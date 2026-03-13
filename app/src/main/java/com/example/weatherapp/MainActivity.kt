@@ -95,7 +95,7 @@ class MainActivity : ComponentActivity() {
                                 requestEnableGps()
                             }
                             is WeatherEvent.NetworkNotFound -> {
-                                Toast.makeText(this@MainActivity, "No Internet Connection", Toast.LENGTH_LONG).show()
+                                Toast.makeText(this@MainActivity, getString(R.string.no_internet_error), Toast.LENGTH_LONG).show()
                             }
                             else -> {}
                         }

@@ -185,7 +185,8 @@ fun WeatherLogicContainer(state: WeatherUiState, viewModel: WeatherViewModel) {
                     data = state.data,
                     unit = state.unit,
                     timeFormat = state.timeFormat,
-                    windUnit = state.windUnit
+                    windUnit = state.windUnit,
+                    address = state.address
                 )
             }
 

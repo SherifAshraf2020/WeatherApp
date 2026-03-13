@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.weatherapp.BuildConfig
+import com.example.weatherapp.R
 import com.example.weatherapp.data.datasource.location.FusedLocationHelper
 import com.example.weatherapp.data.repository.WeatherRepository
 import com.example.weatherapp.data.models.home.FullWeatherData
@@ -31,7 +32,7 @@ class WeatherViewModel
     private val _locationState = MutableStateFlow<Location?>(null)
     val locationState: StateFlow<Location?> = _locationState.asStateFlow()
 
-    private val _addressState = MutableStateFlow("Waiting...")
+    private val _addressState = MutableStateFlow(context.getString(R.string.waiting))
     val addressState: StateFlow<String> = _addressState.asStateFlow()
 
     private val _uiState = MutableStateFlow<WeatherUiState>(WeatherUiState.Loading)
@@ -62,28 +63,39 @@ class WeatherViewModel
     fun startGettingLocation() {
         locationHelper.getFreshLocation { location ->
             _locationState.value = location
-            updateAddress(location)
-            fetchWeather(location.latitude, location.longitude)
+            viewModelScope.launch {
+                val address = updateAddress(location)
+                fetchWeather(location.latitude, location.longitude, address)
+            }
         }
     }
 
-    private fun updateAddress(location: Location) {
-        viewModelScope.launch(Dispatchers.IO) {
+    private suspend fun updateAddress(location: Location): String {
+        return withContext(Dispatchers.IO) {
             try {
                 val geocoder = Geocoder(context, Locale.getDefault())
                 val addresses = geocoder.getFromLocation(location.latitude, location.longitude, 1)
                 if (!addresses.isNullOrEmpty()) {
                     val address = addresses[0]
                     val addressText =
-                        "${address.thoroughfare ?: "Unknown St"}, ${address.locality ?: "City"}"
+                        "${address.thoroughfare ?: context.getString(R.string.unknown_street)}, ${address.locality ?: context.getString(R.string.unknown_city)}"
                     withContext(Dispatchers.Main) {
                         _addressState.value = addressText
                     }
+                    addressText
+                } else {
+                    val fallback = context.getString(R.string.address_not_found)
+                    withContext(Dispatchers.Main) {
+                        _addressState.value = fallback
+                    }
+                    fallback
                 }
             } catch (e: Exception) {
+                val fallback = context.getString(R.string.address_not_found)
                 withContext(Dispatchers.Main) {
-                    _addressState.value = "Address not found"
+                    _addressState.value = fallback
                 }
+                fallback
             }
         }
     }
@@ -129,14 +141,14 @@ class WeatherViewModel
 
             if (!isNetworkAvailable) {
                 isSplashLoading.value = false
-                _uiState.value = WeatherUiState.Error("No Internet Connection")
+                _uiState.value = WeatherUiState.Error(context.getString(R.string.no_internet_error))
                 _eventFlow.emit(WeatherEvent.NetworkNotFound)
                 return@launch
             }
 
             if (!isGpsEnabled) {
                 isSplashLoading.value = false
-                _uiState.value = WeatherUiState.Error("Please enable GPS")
+                _uiState.value = WeatherUiState.Error(context.getString(R.string.enable_gps_error))
                 _eventFlow.emit(WeatherEvent.GpsNotEnabled)
                 return@launch
             }
@@ -146,7 +158,7 @@ class WeatherViewModel
         }
     }
 
-    private fun fetchWeather(lat: Double, lon: Double) {
+    private fun fetchWeather(lat: Double, lon: Double, address: String = "") {
         viewModelScope.launch {
             val unitSymbol = repository.getUserUnitSymbol()
             val timeFormat = repository.getSavedTimeFormat()
@@ -157,11 +169,12 @@ class WeatherViewModel
                         processWeatherData(data),
                         unitSymbol,
                         timeFormat,
-                        windUnit
+                        windUnit,
+                        address
                     )
                     isSplashLoading.value = false
                 }.onFailure {
-                    _uiState.value = WeatherUiState.Error("Failed to load weather")
+                    _uiState.value = WeatherUiState.Error(context.getString(R.string.failed_load_weather))
                     isSplashLoading.value = false
                 }
         }

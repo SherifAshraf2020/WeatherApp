@@ -41,4 +41,22 @@
     <string name="delete_location">Delete</string>
     <string name="removed_message">%s removed from favorites</string>
     <string name="no_favorites_found">No favorites saved yet</string>
+
+    <string name="waiting">Waiting…</string>
+    <string name="unknown_street">Unknown St</string>
+    <string name="unknown_city">City</string>
+    <string name="address_not_found">Address not found</string>
+    <string name="no_internet_error">No Internet Connection</string>
+    <string name="enable_gps_error">Please enable GPS</string>
+    <string name="failed_load_weather">Failed to load weather</string>
+
+    <string name="wind_unit_mph">mph</string>
+    <string name="wind_unit_ms">m/s</string>
+    <string name="wind_unit_knots">knots</string>
+    <string name="wind_unit_fts">ft/s</string>
+
+    <string name="fetching_address">Fetching address…</string>
+    <string name="loading">Loading…</string>
+    <string name="unknown">Unknown</string>
+    <string name="new_location">New Location</string>
 </resources>

@@ -41,7 +41,8 @@ fun CurrentWeatherScreen(
     data: FullWeatherData,
     unit: String,
     timeFormat: String,
-    windUnit: String
+    windUnit: String,
+    address: String = ""
 ) {
     val current = data.current
     val currentDateTime = LocalDateTime.now()
@@ -63,7 +64,7 @@ fun CurrentWeatherScreen(
         ) {
             item {
                 Spacer(modifier = Modifier.height(60.dp))
-                MainWeatherHeader(current, currentDateTime, unit, timeFormat)
+                MainWeatherHeader(current, currentDateTime, unit, timeFormat, address)
             }
 
             item {
@@ -107,7 +108,8 @@ fun MainWeatherHeader(
     current: CurrentWeatherResponse,
     dateTime: LocalDateTime,
     unit: String,
-    timeFormat: String
+    timeFormat: String,
+    address: String = ""
 ) {
     val locale = Locale.getDefault()
     val is12h = timeFormat.contains("12")
@@ -122,12 +124,21 @@ fun MainWeatherHeader(
         ) {
             Icon(Icons.Default.LocationOn, null, tint = Color.White, modifier = Modifier.size(20.dp))
             Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "${current.name}, ${current.sys.country}",
-                color = Color.White,
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold
-            )
+            Column {
+                Text(
+                    text = "${current.name}, ${current.sys.country}",
+                    color = Color.White,
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                if (address.isNotEmpty()) {
+                    Text(
+                        text = address,
+                        color = Color.White.copy(0.7f),
+                        fontSize = 14.sp
+                    )
+                }
+            }
         }
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -166,7 +177,7 @@ fun MainWeatherHeader(
 
             Row(
                 modifier = Modifier.weight(1f),
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = Alignment.Top,
                 horizontalArrangement = Arrangement.End
             ) {
                 Text(
@@ -177,7 +188,7 @@ fun MainWeatherHeader(
                 )
                 Column(
                     horizontalAlignment = Alignment.Start,
-                    modifier = Modifier.padding(start = 4.dp)
+                    modifier = Modifier.padding(start = 4.dp, top = 8.dp)
                 ) {
                     Text(text = "°$unit", color = Color.White, fontSize = 22.sp)
                     Icon(

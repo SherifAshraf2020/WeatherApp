@@ -10,7 +10,8 @@ sealed class WeatherUiState {
         val data: FullWeatherData,
         val unit: String,
         val timeFormat: String,
-        val windUnit: String
+        val windUnit: String,
+        val address: String = ""
     ) : WeatherUiState()
     data class Error(val message: String) : WeatherUiState()
 }

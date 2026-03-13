@@ -1,7 +1,6 @@
 package com.example.weatherapp.presentation.map
 
 import android.location.Geocoder
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
@@ -41,6 +40,11 @@ fun MapScreen(
     var locationName by remember { mutableStateOf<String?>(null) }
     val marker = remember { Marker(mapView) }
 
+    val fetchingText = stringResource(id = R.string.fetching_address)
+    val loadingText = stringResource(id = R.string.loading)
+    val unknownText = stringResource(id = R.string.unknown)
+    val newLocationText = stringResource(id = R.string.new_location)
+
     LaunchedEffect(Unit) {
         viewModel.uiEvent.collect { event ->
             when (event) {
@@ -71,25 +75,24 @@ fun MapScreen(
                         marker.position = p
                         marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
                         
-                        locationName = "Fetching address..."
-                        marker.title = "Loading..."
+                        locationName = fetchingText
+                        marker.title = loadingText
                         marker.showInfoWindow()
 
                         if (!view.overlays.contains(marker)) {
                             view.overlays.add(marker)
                         }
                         
-                        // Fetch address immediately on tap
                         scope.launch {
                             val name = withContext(Dispatchers.IO) {
                                 try {
                                     val geocoder = Geocoder(context, Locale.getDefault())
                                     val addresses = geocoder.getFromLocation(p.latitude, p.longitude, 1)
                                     if (!addresses.isNullOrEmpty()) {
-                                        addresses[0].locality ?: addresses[0].subAdminArea ?: addresses[0].adminArea ?: addresses[0].getAddressLine(0) ?: "Unknown"
-                                    } else "New Location"
+                                        addresses[0].locality ?: addresses[0].subAdminArea ?: addresses[0].adminArea ?: addresses[0].getAddressLine(0) ?: unknownText
+                                    } else newLocationText
                                 } catch (e: Exception) {
-                                    "Location (${p.latitude.toString().take(5)})"
+                                    "${newLocationText} (${p.latitude.toString().take(5)})"
                                 }
                             }
                             locationName = name
@@ -107,7 +110,6 @@ fun MapScreen(
             }
         )
 
-        // Address Display Card
         locationName?.let { name ->
             Card(
                 modifier = Modifier
@@ -140,7 +142,7 @@ fun MapScreen(
             FloatingActionButton(
                 onClick = {
                     if (uiState !is MapUiState.Saving) {
-                        viewModel.saveLocation(selectedLocation!!, locationName ?: "New Location")
+                        viewModel.saveLocation(selectedLocation!!, locationName ?: newLocationText)
                     }
                 },
                 modifier = Modifier

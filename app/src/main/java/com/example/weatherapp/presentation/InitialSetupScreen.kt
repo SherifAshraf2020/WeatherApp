@@ -1,6 +1,5 @@
 package com.example.weatherapp.presentation
 
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -19,7 +18,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -131,25 +129,32 @@ fun InitialSetupScreen(
         }
 
         if (showWindDialog) {
+            val windUnitsMap = mapOf(
+                stringResource(id = R.string.wind_unit_mph) to "mph",
+                stringResource(id = R.string.wind_unit_kmh) to "km/h",
+                stringResource(id = R.string.wind_unit_ms) to "m/s",
+                stringResource(id = R.string.wind_unit_knots) to "knots",
+                stringResource(id = R.string.wind_unit_fts) to "ft/s"
+            )
+            
             AlertDialog(
                 onDismissRequest = { showWindDialog = false },
                 title = { Text(text = stringResource(id = R.string.wind_dialog_title), fontWeight = FontWeight.Bold) },
                 text = {
-                    val units = listOf("mph", "km/h", "m/s", "knots", "ft/s")
                     Column {
-                        units.forEach { unit ->
+                        windUnitsMap.forEach { (display, value) ->
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .selectable(
-                                        selected = (unit == selectedWindUnit),
-                                        onClick = { selectedWindUnit = unit; showWindDialog = false }
+                                        selected = (value == selectedWindUnit),
+                                        onClick = { selectedWindUnit = value; showWindDialog = false }
                                     )
                                     .padding(vertical = 8.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                RadioButton(selected = (unit == selectedWindUnit), onClick = null)
-                                Text(text = unit, modifier = Modifier.padding(start = 16.dp))
+                                RadioButton(selected = (value == selectedWindUnit), onClick = null)
+                                Text(text = display, modifier = Modifier.padding(start = 16.dp))
                             }
                         }
                     }
@@ -211,8 +216,13 @@ private fun SettingRow(
                         .padding(horizontal = 12.dp, vertical = 4.dp),
                     contentAlignment = Alignment.Center
                 ) {
+                    val displayValue = if (text == "12" || text == "24") {
+                        text + " " + stringResource(id = if (text == "12") R.string.unit_12h else R.string.unit_24h)
+                        text // Keep it simple if already localized in options list
+                    } else text
+
                     Text(
-                        text = text,
+                        text = displayValue,
                         color = if (isSelected) Color(0xFF00ACC1) else Color.Gray,
                         fontSize = 14.sp,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
