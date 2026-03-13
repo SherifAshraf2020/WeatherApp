@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -17,7 +18,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.weatherapp.R
@@ -42,6 +42,9 @@ fun MainScreenWithDrawer(
     val scope = rememberCoroutineScope()
     val pagerState = rememberPagerState(pageCount = { 3 })
 
+    var showUnitDialog by remember { mutableStateOf(false) }
+    var showLanguageDialog by remember { mutableStateOf(false) }
+
     LaunchedEffect(Unit) {
         viewModel.eventFlow.collect { event ->
             if (event is WeatherEvent.OpenNavigationDrawer) {
@@ -53,32 +56,27 @@ fun MainScreenWithDrawer(
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
-            ModalDrawerSheet {
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = stringResource(id = R.string.app_name),
-                    modifier = Modifier.padding(16.dp),
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                HorizontalDivider()
-                NavigationDrawerItem(
-                    label = { Text(stringResource(id = R.string.menu_home)) },
-                    selected = pagerState.currentPage == 0,
-                    onClick = { scope.launch { pagerState.animateScrollToPage(0); drawerState.close() } },
-                    icon = { Icon(Icons.Default.Home, null) }
-                )
-                NavigationDrawerItem(
-                    label = { Text(stringResource(id = R.string.favorite_locations)) },
-                    selected = pagerState.currentPage == 1,
-                    onClick = { scope.launch { pagerState.animateScrollToPage(1); drawerState.close() } },
-                    icon = { Icon(Icons.Default.Favorite, null) }
-                )
-                NavigationDrawerItem(
-                    label = { Text(stringResource(id = R.string.menu_alerts)) },
-                    selected = pagerState.currentPage == 2,
-                    onClick = { scope.launch { pagerState.animateScrollToPage(2); drawerState.close() } },
-                    icon = { Icon(Icons.Default.Notifications, null) }
+            ModalDrawerSheet(
+                modifier = Modifier.fillMaxWidth(0.8f),
+                drawerContainerColor = Color(0xFF212121),
+                drawerShape = RoundedCornerShape(0.dp)
+            ) {
+                DrawerMenuContent(
+                    currentPage = pagerState.currentPage,
+                    onItemClick = { page ->
+                        scope.launch {
+                            pagerState.animateScrollToPage(page)
+                            drawerState.close()
+                        }
+                    },
+                    onUnitSettingsClick = {
+                        scope.launch { drawerState.close() }
+                        showUnitDialog = true
+                    },
+                    onLanguageClick = {
+                        scope.launch { drawerState.close() }
+                        showLanguageDialog = true
+                    }
                 )
             }
         }
@@ -87,26 +85,23 @@ fun MainScreenWithDrawer(
             topBar = {
                 CenterAlignedTopAppBar(
                     title = { },
-                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent),
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                        containerColor = Color.Black.copy(alpha = 0.2f)
+                    ),
                     navigationIcon = {
                         IconButton(onClick = { viewModel.onMenuClicked() }) {
-                            Icon(Icons.Default.Menu, contentDescription = null)
+                            Icon(
+                                Icons.Default.Menu,
+                                contentDescription = null,
+                                tint = Color.White
+                            )
                         }
                     }
                 )
             }
         ) { paddingValues ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-            ) {
-                HorizontalPager(
-                    state = pagerState,
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                ) { page ->
+            Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+                HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { page ->
                     when (page) {
                         0 -> WeatherLogicContainer(uiState, viewModel)
                         1 -> FavoritesScreen(
@@ -116,16 +111,17 @@ fun MainScreenWithDrawer(
                                 navController.navigate("weather_details/$lat/$lon/$city")
                             }
                         )
-
                         2 -> AlertScreen()
                     }
                 }
 
+                // Pager Indicators
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(60.dp),
-                    contentAlignment = Alignment.Center
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 24.dp)
+                        .background(Color.Black.copy(alpha = 0.5f), CircleShape)
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
                 ) {
                     Row(
                         horizontalArrangement = Arrangement.Center,
@@ -135,11 +131,11 @@ fun MainScreenWithDrawer(
                             val isSelected = pagerState.currentPage == iteration
                             Box(
                                 modifier = Modifier
-                                    .padding(6.dp)
-                                    .size(if (isSelected) 12.dp else 8.dp)
+                                    .padding(4.dp)
+                                    .size(if (isSelected) 10.dp else 8.dp)
                                     .background(
-                                        if (isSelected) MaterialTheme.colorScheme.primary else Color.LightGray,
-                                        shape = CircleShape
+                                        if (isSelected) Color(0xFF00ACC1) else Color.White.copy(alpha = 0.6f),
+                                        CircleShape
                                     )
                                     .clickable {
                                         scope.launch { pagerState.animateScrollToPage(iteration) }
@@ -151,6 +147,13 @@ fun MainScreenWithDrawer(
             }
         }
     }
+
+    if (showUnitDialog) {
+        UnitSettingsDialog(onDismiss = { showUnitDialog = false })
+    }
+    if (showLanguageDialog) {
+        LanguageSelectionDialog(onDismiss = { showLanguageDialog = false })
+    }
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -158,28 +161,16 @@ fun MainScreenWithDrawer(
 fun WeatherLogicContainer(state: WeatherUiState, viewModel: WeatherViewModel) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         when (state) {
-            is WeatherUiState.Loading -> {
-                CircularProgressIndicator()
-            }
-
+            is WeatherUiState.Loading -> { CircularProgressIndicator() }
             is WeatherUiState.PermissionRequired -> {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(
-                        Icons.Default.LocationOff,
-                        null,
-                        modifier = Modifier.size(64.dp),
-                        tint = Color.Gray
-                    )
-                    Text(
-                        stringResource(id = R.string.permission_needed),
-                        modifier = Modifier.padding(16.dp)
-                    )
+                    Icon(Icons.Default.LocationOff, null, modifier = Modifier.size(64.dp), tint = Color.Gray)
+                    Text(stringResource(id = R.string.permission_needed), modifier = Modifier.padding(16.dp), color = Color.White)
                     Button(onClick = { viewModel.startGettingLocation() }) {
                         Text(stringResource(id = R.string.btn_grant_permission))
                     }
                 }
             }
-
             is WeatherUiState.Success -> {
                 CurrentWeatherScreen(
                     data = state.data,
@@ -189,29 +180,16 @@ fun WeatherLogicContainer(state: WeatherUiState, viewModel: WeatherViewModel) {
                     address = state.address
                 )
             }
-
             is WeatherUiState.Error -> {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(
-                        Icons.Default.CloudOff,
-                        null,
-                        modifier = Modifier.size(48.dp),
-                        tint = Color.Gray
-                    )
-                    Text(
-                        "${stringResource(id = R.string.error_prefix)} ${state.message}",
-                        color = Color.Red,
-                        modifier = Modifier.padding(16.dp)
-                    )
+                    Icon(Icons.Default.CloudOff, null, modifier = Modifier.size(48.dp), tint = Color.Gray)
+                    Text("${stringResource(id = R.string.error_prefix)} ${state.message}", color = Color.Red, modifier = Modifier.padding(16.dp))
                     Button(onClick = { viewModel.startGettingLocation() }) {
                         Text(stringResource(id = R.string.btn_retry))
                     }
                 }
             }
-
-            else -> {
-                Text(stringResource(id = R.string.setup_incomplete))
-            }
+            else -> { Text(stringResource(id = R.string.setup_incomplete), color = Color.White) }
         }
     }
 }
@@ -220,17 +198,8 @@ fun WeatherLogicContainer(state: WeatherUiState, viewModel: WeatherViewModel) {
 fun AlertScreen() {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(
-                Icons.Default.NotificationsNone,
-                null,
-                modifier = Modifier.size(64.dp),
-                tint = Color.LightGray
-            )
-            Text(
-                stringResource(id = R.string.no_alerts_text),
-                style = MaterialTheme.typography.bodyLarge,
-                color = Color.Gray
-            )
+            Icon(Icons.Default.NotificationsNone, null, modifier = Modifier.size(64.dp), tint = Color.LightGray)
+            Text(stringResource(id = R.string.no_alerts_text), style = MaterialTheme.typography.bodyLarge, color = Color.Gray)
         }
     }
 }
