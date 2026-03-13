@@ -111,51 +111,80 @@ fun MainWeatherHeader(
 ) {
     val locale = Locale.getDefault()
     val is12h = timeFormat.contains("12")
-    val timePattern = if (is12h) "hh:mm a" else "HH:mm"
+
+    val timeValue = dateTime.format(DateTimeFormatter.ofPattern(if (is12h) "hh:mm" else "HH:mm", locale))
+    val amPm = if (is12h) dateTime.format(DateTimeFormatter.ofPattern(" a", locale)) else ""
 
     Column(modifier = Modifier.fillMaxWidth()) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Default.LocationOn, null, tint = Color.White, modifier = Modifier.size(18.dp))
-            Spacer(modifier = Modifier.width(4.dp))
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(Icons.Default.LocationOn, null, tint = Color.White, modifier = Modifier.size(20.dp))
+            Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = "${current.name}, ${current.sys.country}",
                 color = Color.White,
-                fontSize = 20.sp,
+                fontSize = 22.sp,
                 fontWeight = FontWeight.Bold
             )
         }
+
+        Spacer(modifier = Modifier.height(12.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
+            Column(modifier = Modifier.weight(1.3f)) {
                 Text(
                     text = dateTime.format(DateTimeFormatter.ofPattern("EEEE, dd MMM", locale)),
-                    color = Color.White.copy(0.7f)
+                    color = Color.White.copy(0.7f),
+                    fontSize = 16.sp,
+                    maxLines = 1
                 )
-                Text(
-                    text = dateTime.format(DateTimeFormatter.ofPattern(timePattern, locale)),
-                    color = Color.White,
-                    fontSize = 54.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                Row(verticalAlignment = Alignment.Bottom) {
+                    Text(
+                        text = timeValue,
+                        color = Color.White,
+                        fontSize = if (is12h) 44.sp else 50.sp,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1
+                    )
+                    if (is12h) {
+                        Text(
+                            text = amPm,
+                            color = Color.White.copy(0.9f),
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(bottom = 6.dp, start = 4.dp)
+                        )
+                    }
+                }
             }
-            Row(verticalAlignment = Alignment.CenterVertically) {
+
+            Row(
+                modifier = Modifier.weight(1f),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.End
+            ) {
                 Text(
                     text = "${current.main.temp.toInt()}",
                     color = Color.White,
-                    fontSize = 80.sp,
+                    fontSize = 72.sp,
                     fontWeight = FontWeight.W100
                 )
-                Column {
-                    Text(text = "°$unit", color = Color.White, fontSize = 24.sp)
+                Column(
+                    horizontalAlignment = Alignment.Start,
+                    modifier = Modifier.padding(start = 4.dp)
+                ) {
+                    Text(text = "°$unit", color = Color.White, fontSize = 22.sp)
                     Icon(
                         imageVector = getWeatherIcon(current.weather.firstOrNull()?.main),
                         contentDescription = null,
                         tint = Color.White,
-                        modifier = Modifier.size(38.dp)
+                        modifier = Modifier.size(34.dp)
                     )
                 }
             }
