@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.weatherapp.R
 import com.example.weatherapp.data.datasource.local.entities.FavoriteEntity
+import androidx.compose.ui.text.intl.Locale as ComposeLocale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,6 +47,8 @@ fun FavoritesScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+
+    val isArabic = ComposeLocale.current.language == "ar"
 
     LaunchedEffect(Unit) {
         viewModel.uiEvent.collect { event ->
@@ -91,6 +94,7 @@ fun FavoritesScreen(
                     } else {
                         FavoritesList(
                             favorites = currentState.favorites,
+                            isArabic = isArabic,
                             onItemClick = { viewModel.onLocationSelected(it) },
                             onDeleteClick = { viewModel.onDeleteLocation(it) }
                         )
@@ -110,6 +114,7 @@ fun FavoritesScreen(
 @Composable
 fun FavoritesList(
     favorites: List<FavoriteEntity>,
+    isArabic: Boolean,
     onItemClick: (FavoriteEntity) -> Unit,
     onDeleteClick: (FavoriteEntity) -> Unit
 ) {
@@ -120,10 +125,11 @@ fun FavoritesList(
     ) {
         items(
             items = favorites,
-            key = { it.cityName }
+            key = { it.id }
         ) { favorite ->
             FavoriteItem(
                 favorite = favorite,
+                isArabic = isArabic,
                 onItemClick = onItemClick,
                 onDeleteClick = onDeleteClick
             )
@@ -134,9 +140,12 @@ fun FavoritesList(
 @Composable
 fun FavoriteItem(
     favorite: FavoriteEntity,
+    isArabic: Boolean,
     onItemClick: (FavoriteEntity) -> Unit,
     onDeleteClick: (FavoriteEntity) -> Unit
 ) {
+    val city = if (isArabic) favorite.cityNameAr else favorite.cityNameEn
+    val country = if (isArabic) favorite.countryAr else favorite.countryEn
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -152,7 +161,7 @@ fun FavoriteItem(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = favorite.cityName,
+                    text = if (country != null) "$city, $country" else city,
                     style = MaterialTheme.typography.titleMedium
                 )
                 Text(

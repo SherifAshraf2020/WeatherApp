@@ -13,10 +13,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.weatherapp.R
 import com.example.weatherapp.presentation.home.WeatherViewModel
 
 @Composable
@@ -37,29 +39,29 @@ fun DrawerMenuContent(
             .verticalScroll(rememberScrollState())
     ) {
         Text(
-            text = "SETTING",
+            text = stringResource(id = R.string.settings_header),
             modifier = Modifier.padding(16.dp),
             color = Color.White,
             fontWeight = FontWeight.Bold,
             fontSize = 18.sp
         )
-        DrawerMenuItem(Icons.Default.Home, "Home", currentPage == 0) { onItemClick(0) }
-        DrawerMenuItem(Icons.Default.LocationOn, "Manage location", currentPage == 1) { onItemClick(1) }
-        DrawerMenuItem(Icons.Default.Notifications, "Alerts", currentPage == 2) { onItemClick(2) }
+        DrawerMenuItem(Icons.Default.Home, stringResource(id = R.string.menu_home), currentPage == 0) { onItemClick(0) }
+        DrawerMenuItem(Icons.Default.LocationOn, stringResource(id = R.string.favorite_locations), currentPage == 1) { onItemClick(1) }
+        DrawerMenuItem(Icons.Default.Notifications, stringResource(id = R.string.menu_alerts), currentPage == 2) { onItemClick(2) }
 
         HorizontalDivider(color = Color.Gray.copy(0.2f), modifier = Modifier.padding(vertical = 8.dp))
 
-        DrawerSwitchItem(Icons.Default.NotificationsActive, "Notification", notifEnabled) {
+        DrawerSwitchItem(Icons.Default.NotificationsActive, stringResource(id = R.string.notif_label), notifEnabled) {
             viewModel.toggleNotifications(it)
         }
-        DrawerSwitchItem(Icons.Default.Thermostat, "Status bar", statusBarEnabled) {
+        DrawerSwitchItem(Icons.Default.Thermostat, stringResource(id = R.string.status_label), statusBarEnabled) {
             viewModel.toggleStatusBar(it)
         }
 
         HorizontalDivider(color = Color.Gray.copy(0.2f), modifier = Modifier.padding(vertical = 8.dp))
 
-        DrawerMenuItem(Icons.Default.Settings, "Unit setting", false) { onUnitSettingsClick() }
-        DrawerMenuItem(Icons.Default.Language, "Languages", false) { onLanguageClick() }
+        DrawerMenuItem(Icons.Default.Settings, stringResource(id = R.string.settings_header), false) { onUnitSettingsClick() }
+        DrawerMenuItem(Icons.Default.Language, stringResource(id = R.string.languages_label), false) { onLanguageClick() }
 
         Spacer(modifier = Modifier.weight(1f))
 
@@ -81,32 +83,32 @@ fun UnitSettingsDialog(viewModel: WeatherViewModel, onDismiss: () -> Unit) {
         containerColor = Color(0xFF2B2B2B),
         shape = RoundedCornerShape(8.dp),
         title = {
-            Text("UNIT SETTING", color = Color.White, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            Text(stringResource(id = R.string.settings_header), color = Color.White, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center, fontSize = 18.sp, fontWeight = FontWeight.Bold)
         },
         text = {
             Column(modifier = Modifier.fillMaxWidth()) {
-                UnitToggleRow("Temperature", Icons.Rounded.WbSunny, listOf("F", "C"), tempUnit) {
+                UnitToggleRow(stringResource(id = R.string.temp_label), Icons.Rounded.WbSunny, listOf("F", "C"), tempUnit) {
                     viewModel.updateSettings(temp = it)
                 }
                 HorizontalDivider(color = Color.Gray.copy(0.1f), modifier = Modifier.padding(vertical = 4.dp))
 
                 val selectedTimeDisplay = if (timeFormat.contains("12")) "12" else "24"
-                UnitToggleRow("Time format", Icons.Rounded.Schedule, listOf("12", "24"), selectedTimeDisplay) {
+                UnitToggleRow(stringResource(id = R.string.time_label), Icons.Rounded.Schedule, listOf("12", "24"), selectedTimeDisplay) {
                     viewModel.updateSettings(time = it)
                 }
                 HorizontalDivider(color = Color.Gray.copy(0.1f), modifier = Modifier.padding(vertical = 4.dp))
 
-                UnitDropdownRow("Wind speed", Icons.Rounded.Air, listOf("km/h", "mph", "m/s", "knots", "ft/s"), windUnit) {
+                UnitDropdownRow(stringResource(id = R.string.wind_label), Icons.Rounded.Air, listOf("km/h", "mph", "m/s", "knots", "ft/s"), windUnit) {
                     viewModel.updateSettings(wind = it)
                 }
                 HorizontalDivider(color = Color.Gray.copy(0.1f), modifier = Modifier.padding(vertical = 4.dp))
 
-                UnitDropdownRow("Pressure", Icons.Rounded.Compress, listOf("hPa", "mbar", "mmHg", "inHg"), pressureUnit) {
+                UnitDropdownRow(stringResource(id = R.string.pressure_label), Icons.Rounded.Compress, listOf("hPa", "mbar", "mmHg", "inHg"), pressureUnit) {
                     viewModel.updateSettings(pressure = it)
                 }
                 HorizontalDivider(color = Color.Gray.copy(0.1f), modifier = Modifier.padding(vertical = 4.dp))
 
-                UnitToggleRow("Precipitation", Icons.Rounded.InvertColors, listOf("mm", "in"), precipUnit) {
+                UnitToggleRow(stringResource(id = R.string.precip_label), Icons.Rounded.InvertColors, listOf("mm", "in"), precipUnit) {
                     viewModel.updateSettings(precipitation = it)
                 }
             }
@@ -114,7 +116,7 @@ fun UnitSettingsDialog(viewModel: WeatherViewModel, onDismiss: () -> Unit) {
         confirmButton = {
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 Button(onClick = onDismiss, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF424242)), shape = RoundedCornerShape(4.dp)) {
-                    Text("DONE", color = Color.White)
+                    Text(stringResource(id = R.string.btn_done), color = Color.White)
                 }
             }
         }
@@ -191,28 +193,39 @@ fun UnitDropdownRow(label: String, icon: ImageVector, options: List<String>, cur
 }
 
 @Composable
-fun LanguageSelectionDialog(onDismiss: () -> Unit) {
-    val languages = listOf("English" to "en", "العربية" to "ar")
-    var selected by remember { mutableStateOf("en") }
+fun LanguageSelectionDialog(viewModel: WeatherViewModel, onDismiss: () -> Unit) {
+    val currentLang by viewModel.language.collectAsState()
+    var tempSelectedLang by remember { mutableStateOf(currentLang) }
+
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = Color(0xFF2B2B2B),
-        shape = RoundedCornerShape(8.dp),
-        title = { Text("Select Language", color = Color.White, fontWeight = FontWeight.Bold, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) },
+        title = { Text(stringResource(id = R.string.language_dialog_title)) },
         text = {
             Column {
-                languages.forEach { (name, code) ->
+                listOf("English" to "en", "العربية" to "ar").forEach { (name, code) ->
                     Row(
-                        modifier = Modifier.fillMaxWidth().selectable(selected == code, onClick = { selected = code }).padding(vertical = 12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .selectable(
+                                selected = (tempSelectedLang == code),
+                                onClick = { tempSelectedLang = code }
+                            )
+                            .padding(vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        RadioButton(selected == code, onClick = null, colors = RadioButtonDefaults.colors(selectedColor = Color(0xFF00ACC1), unselectedColor = Color.Gray))
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Text(name, color = Color.White, fontSize = 16.sp)
+                        RadioButton(selected = (tempSelectedLang == code), onClick = null)
+                        Text(text = name, modifier = Modifier.padding(start = 16.dp))
                     }
                 }
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("DONE", color = Color(0xFF00ACC1)) } }
+        confirmButton = {
+            TextButton(onClick = {
+                viewModel.changeLanguage(tempSelectedLang)
+                onDismiss()
+            }) {
+                Text(stringResource(id = R.string.btn_done))
+            }
+        }
     )
 }

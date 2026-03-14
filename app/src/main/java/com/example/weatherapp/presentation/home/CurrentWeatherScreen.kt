@@ -15,6 +15,7 @@ import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,6 +32,8 @@ import com.example.weatherapp.data.models.current.CurrentWeatherResponse
 import com.example.weatherapp.data.models.forecast.ForecastItem
 import com.example.weatherapp.data.models.home.FullWeatherData
 import com.example.weatherapp.data.util.UnitConverter
+import com.example.weatherapp.data.util.localize
+import com.example.weatherapp.data.util.localizeTemp
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -48,7 +51,6 @@ fun CurrentWeatherScreen(
     address: String = ""
 ) {
     val current = data.current
-    val currentDateTime = LocalDateTime.now()
     val todayDate = LocalDate.now()
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -67,7 +69,7 @@ fun CurrentWeatherScreen(
         ) {
             item {
                 Spacer(modifier = Modifier.height(60.dp))
-                MainWeatherHeader(current, currentDateTime, unit, timeFormat, address)
+                MainWeatherHeader(current, LocalDateTime.now(), unit, timeFormat, address)
             }
 
             item {
@@ -123,7 +125,7 @@ fun MainWeatherHeader(
     val locale = Locale.getDefault()
     val is12h = timeFormat.contains("12")
 
-    val timeValue = dateTime.format(DateTimeFormatter.ofPattern(if (is12h) "hh:mm" else "HH:mm", locale))
+    val timeValue = dateTime.format(DateTimeFormatter.ofPattern(if (is12h) "hh:mm" else "HH:mm", locale)).localize()
     val amPm = if (is12h) dateTime.format(DateTimeFormatter.ofPattern(" a", locale)) else ""
 
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -159,7 +161,7 @@ fun MainWeatherHeader(
         ) {
             Column(modifier = Modifier.weight(1.3f)) {
                 Text(
-                    text = dateTime.format(DateTimeFormatter.ofPattern("EEEE, dd MMM", locale)),
+                    text = dateTime.format(DateTimeFormatter.ofPattern("EEEE, dd MMM", locale)).localize(),
                     color = Color.White.copy(0.7f),
                     fontSize = 16.sp,
                     maxLines = 1
@@ -190,7 +192,7 @@ fun MainWeatherHeader(
                 horizontalArrangement = Arrangement.End
             ) {
                 Text(
-                    text = "${current.main.temp.toInt()}",
+                    text = current.main.temp.localizeTemp(),
                     color = Color.White,
                     fontSize = 72.sp,
                     fontWeight = FontWeight.W100
@@ -233,14 +235,14 @@ fun WeatherExtraDetails(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                DetailItem(stringResource(id = R.string.wind_label), "$convertedWind $windUnit", Icons.Rounded.Air)
-                DetailItem(stringResource(id = R.string.humidity_label), "${current.main.humidity}%", Icons.Rounded.WaterDrop)
-                DetailItem(stringResource(id = R.string.pressure_label), "$convertedPressure $pressureUnit", Icons.Rounded.Compress)
+                DetailItem(stringResource(id = R.string.wind_label), "${convertedWind.localize()} $windUnit", Icons.Rounded.Air)
+                DetailItem(stringResource(id = R.string.humidity_label), "${current.main.humidity.localize()}%", Icons.Rounded.WaterDrop)
+                DetailItem(stringResource(id = R.string.pressure_label), "${convertedPressure.localize()} $pressureUnit", Icons.Rounded.Compress)
             }
             Spacer(modifier = Modifier.height(16.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                DetailItem("Precipitation", "$convertedPrecipitation $precipitationUnit", Icons.Rounded.InvertColors)
-                DetailItem(stringResource(id = R.string.clouds_label), "${current.clouds.all}%", Icons.Rounded.Cloud)
+                DetailItem(stringResource(id = R.string.precip_label), "${convertedPrecipitation.localize()} $precipitationUnit", Icons.Rounded.InvertColors)
+                DetailItem(stringResource(id = R.string.clouds_label), "${current.clouds.all.localize()}%", Icons.Rounded.Cloud)
             }
         }
     }
@@ -259,6 +261,7 @@ fun DetailItem(label: String, value: String, icon: ImageVector) {
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun HourlyForecastCard(list: List<ForecastItem>, timeFormat: String) {
+    val locale = Locale.getDefault()
     val is12h = timeFormat.contains("12")
     val timePattern = if (is12h) "h a" else "HH:mm"
     Surface(
@@ -274,12 +277,12 @@ fun HourlyForecastCard(list: List<ForecastItem>, timeFormat: String) {
                 val timeResult = runCatching {
                     LocalDateTime.parse(hour.dtTxt, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
                 }.getOrNull()
-                
+
                 if (timeResult != null) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(timeResult.format(DateTimeFormatter.ofPattern(timePattern)), color = Color.White, fontSize = 12.sp)
+                        Text(timeResult.format(DateTimeFormatter.ofPattern(timePattern, locale)).localize(), color = Color.White, fontSize = 12.sp)
                         Icon(getWeatherIcon(hour.weather.firstOrNull()?.main), null, tint = Color.White, modifier = Modifier.size(26.dp))
-                        Text("${hour.main.temp.toInt()}°", color = Color.White, fontWeight = FontWeight.Bold)
+                        Text("${hour.main.temp.localizeTemp()}°", color = Color.White, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -304,7 +307,7 @@ fun DailyForecastCard(list: List<ForecastItem>) {
                 val dateResult = runCatching {
                     LocalDateTime.parse(day.dtTxt, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
                 }.getOrNull()
-                
+
                 if (dateResult != null) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
@@ -315,7 +318,7 @@ fun DailyForecastCard(list: List<ForecastItem>) {
                         Spacer(modifier = Modifier.height(8.dp))
                         Icon(getWeatherIcon(day.weather.firstOrNull()?.main), null, tint = Color.White, modifier = Modifier.size(28.dp))
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text("${day.main.temp.toInt()}°", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        Text("${day.main.temp.localizeTemp()}°", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }

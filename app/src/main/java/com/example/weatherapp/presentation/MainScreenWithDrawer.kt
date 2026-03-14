@@ -152,7 +152,7 @@ fun MainScreenWithDrawer(
         UnitSettingsDialog(viewModel = viewModel, onDismiss = { showUnitDialog = false })
     }
     if (showLanguageDialog) {
-        LanguageSelectionDialog(onDismiss = { showLanguageDialog = false })
+        LanguageSelectionDialog(viewModel = viewModel, onDismiss = { showLanguageDialog = false })
     }
 }
 

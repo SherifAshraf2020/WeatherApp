@@ -38,6 +38,7 @@ fun MapScreen(
     val mapView = remember { MapView(context) }
     var selectedLocation by remember { mutableStateOf<LatLng?>(null) }
     var locationName by remember { mutableStateOf<String?>(null) }
+    var namesState by remember { mutableStateOf<Map<String, String?>?>(null) }
     val marker = remember { Marker(mapView) }
 
     val fetchingText = stringResource(id = R.string.fetching_address)
@@ -60,7 +61,6 @@ fun MapScreen(
                     setMultiTouchControls(true)
                     setBuiltInZoomControls(true)
                     zoomController.setVisibility(org.osmdroid.views.CustomZoomButtonsController.Visibility.ALWAYS)
-
                     controller.setZoom(10.0)
                     controller.setCenter(GeoPoint(30.0444, 31.2357))
                 }
@@ -74,7 +74,7 @@ fun MapScreen(
                         selectedLocation = LatLng(p.latitude, p.longitude)
                         marker.position = p
                         marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                        
+
                         locationName = fetchingText
                         marker.title = loadingText
                         marker.showInfoWindow()
@@ -82,21 +82,38 @@ fun MapScreen(
                         if (!view.overlays.contains(marker)) {
                             view.overlays.add(marker)
                         }
-                        
+
                         scope.launch {
-                            val name = withContext(Dispatchers.IO) {
+                            val results = withContext(Dispatchers.IO) {
                                 try {
-                                    val geocoder = Geocoder(context, Locale.getDefault())
-                                    val addresses = geocoder.getFromLocation(p.latitude, p.longitude, 1)
-                                    if (!addresses.isNullOrEmpty()) {
-                                        addresses[0].locality ?: addresses[0].subAdminArea ?: addresses[0].adminArea ?: addresses[0].getAddressLine(0) ?: unknownText
-                                    } else newLocationText
+                                    val geocoderAr = Geocoder(context, Locale("ar"))
+                                    val geocoderEn = Geocoder(context, Locale.ENGLISH)
+
+                                    val addrAr = geocoderAr.getFromLocation(p.latitude, p.longitude, 1)?.firstOrNull()
+                                    val addrEn = geocoderEn.getFromLocation(p.latitude, p.longitude, 1)?.firstOrNull()
+
+                                    val nameAr = addrAr?.locality ?: addrAr?.subAdminArea ?: unknownText
+                                    val nameEn = addrEn?.locality ?: addrEn?.subAdminArea ?: "Unknown"
+
+                                    mapOf(
+                                        "ar" to nameAr,
+                                        "en" to nameEn,
+                                        "countryAr" to addrAr?.countryName,
+                                        "countryEn" to addrEn?.countryName
+                                    )
                                 } catch (e: Exception) {
-                                    "${newLocationText} (${p.latitude.toString().take(5)})"
+                                    null
                                 }
                             }
-                            locationName = name
-                            marker.title = name
+
+                            if (results != null) {
+                                namesState = results
+                                locationName = if (Locale.getDefault().language == "ar") results["ar"] else results["en"]
+                                marker.title = locationName
+                            } else {
+                                locationName = newLocationText
+                                marker.title = newLocationText
+                            }
                             marker.showInfoWindow()
                         }
 
@@ -123,17 +140,9 @@ fun MapScreen(
                     modifier = Modifier.padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.LocationOn,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
+                    Icon(imageVector = Icons.Default.LocationOn, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = name,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Text(text = name, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }
@@ -142,7 +151,14 @@ fun MapScreen(
             FloatingActionButton(
                 onClick = {
                     if (uiState !is MapUiState.Saving) {
-                        viewModel.saveLocation(selectedLocation!!, locationName ?: newLocationText)
+                        viewModel.saveLocation(
+                            lat = selectedLocation!!.latitude,
+                            lon = selectedLocation!!.longitude,
+                            nameAr = namesState?.get("ar") ?: unknownText,
+                            nameEn = namesState?.get("en") ?: "Unknown",
+                            countryAr = namesState?.get("countryAr"),
+                            countryEn = namesState?.get("countryEn")
+                        )
                     }
                 },
                 modifier = Modifier
