@@ -13,7 +13,8 @@ interface WeatherService {
         @Query("lat") lat: Double,
         @Query("lon") lon: Double,
         @Query("appid") apiKey: String,
-        @Query("units") units: String = Constants.UNITS
+        @Query("units") units: String = Constants.UNITS,
+        @Query("lang") lang: String
     ): Response<CurrentWeatherResponse>
 
     @GET(Constants.FORECAST_ENDPOINT)
@@ -21,6 +22,7 @@ interface WeatherService {
         @Query("lat") lat: Double,
         @Query("lon") lon: Double,
         @Query("appid") apiKey: String,
-        @Query("units") units: String = Constants.UNITS
+        @Query("units") units: String = Constants.UNITS,
+        @Query("lang") lang: String
     ): Response<ForecastResponse>
 }
