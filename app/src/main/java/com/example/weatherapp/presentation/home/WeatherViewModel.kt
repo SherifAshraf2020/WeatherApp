@@ -62,6 +62,9 @@ class WeatherViewModel(
     private val _eventFlow = MutableSharedFlow<WeatherEvent>()
     val eventFlow = _eventFlow.asSharedFlow()
 
+    private val _language = MutableStateFlow(repository.getSavedLanguage())
+    val language = _language.asStateFlow()
+
     var isSplashLoading = mutableStateOf(true)
         private set
 
@@ -112,6 +115,20 @@ class WeatherViewModel(
             }
 
             _locationState.value?.let { fetchWeather(it.latitude, it.longitude, _addressState.value) }
+        }
+    }
+
+    fun changeLanguage(langCode: String) {
+        viewModelScope.launch {
+            repository.saveLanguage(langCode)
+            _language.value = langCode
+
+            _eventFlow.emit(WeatherEvent.LanguageChanged)
+
+            _locationState.value?.let {
+                val address = updateAddress(it)
+                fetchWeather(it.latitude, it.longitude, address)
+            }
         }
     }
 

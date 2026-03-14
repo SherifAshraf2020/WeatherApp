@@ -10,4 +10,5 @@ sealed class WeatherEvent {
     object GpsNotEnabled : WeatherEvent()
     object NetworkNotFound : WeatherEvent()
     object RequestLocationPermission : WeatherEvent()
+    object LanguageChanged : WeatherEvent()
 }

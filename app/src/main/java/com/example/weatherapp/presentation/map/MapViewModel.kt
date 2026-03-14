@@ -21,15 +21,23 @@ class MapViewModel(private val repository: WeatherRepository) : ViewModel() {
     val uiEvent = _uiEvent.asSharedFlow()
 
 
-    fun saveLocation(latLng: LatLng, cityName: String) {
+    fun saveLocation(lat: Double,
+                     lon: Double,
+                     nameAr: String,
+                     nameEn: String,
+                     countryAr: String?,
+                     countryEn: String?) {
         viewModelScope.launch {
             _uiState.value = MapUiState.Saving
             try {
                 repository.saveLocationToFavorites(
                     FavoriteEntity(
-                        cityName = cityName,
-                        latitude = latLng.latitude,
-                        longitude = latLng.longitude
+                        cityNameAr = nameAr,
+                        cityNameEn = nameEn,
+                        countryAr = countryAr,
+                        countryEn = countryEn,
+                        latitude = lat,
+                        longitude = lon
                     )
                 )
                 _uiEvent.emit(MapUiEvent.LocationSaved)

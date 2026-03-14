@@ -43,8 +43,7 @@ class FavoritesViewModel(private val repository: WeatherRepository) : ViewModel(
                 FavoritesUiEvent.NavigateToWeatherDetails(
                     lat = favorite.latitude,
                     lon = favorite.longitude,
-                    cityName = favorite.cityName
-                )
+                    cityName = favorite.cityNameEn                )
             )
         }
     }
@@ -60,7 +59,7 @@ class FavoritesViewModel(private val repository: WeatherRepository) : ViewModel(
     fun onDeleteLocation(favorite: FavoriteEntity) {
         viewModelScope.launch {
             repository.removeFromFavorites(favorite)
-            _uiEvent.emit(FavoritesUiEvent.ShowToast(favorite.cityName))        }
+            _uiEvent.emit(FavoritesUiEvent.ShowToast(favorite.cityNameEn))        }
     }
 }
 
