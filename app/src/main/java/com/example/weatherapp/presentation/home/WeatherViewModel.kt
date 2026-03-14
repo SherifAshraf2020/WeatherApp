@@ -12,6 +12,7 @@ import com.example.weatherapp.R
 import com.example.weatherapp.data.datasource.location.FusedLocationHelper
 import com.example.weatherapp.data.repository.WeatherRepository
 import com.example.weatherapp.data.models.home.FullWeatherData
+import com.example.weatherapp.data.util.UnitConverter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,12 +23,32 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Locale
 
-class WeatherViewModel
-    (
+class WeatherViewModel(
     private val repository: WeatherRepository,
     private val locationHelper: FusedLocationHelper,
     private val context: Context
 ) : ViewModel() {
+
+    private val _tempUnit = MutableStateFlow(repository.getUserUnitSymbol())
+    val tempUnit = _tempUnit.asStateFlow()
+
+    private val _timeFormat = MutableStateFlow(repository.getSavedTimeFormat())
+    val timeFormat = _timeFormat.asStateFlow()
+
+    private val _windUnit = MutableStateFlow(repository.getSavedWindUnit())
+    val windUnit = _windUnit.asStateFlow()
+
+    private val _pressureUnit = MutableStateFlow(repository.getSavedPressureUnit())
+    val pressureUnit = _pressureUnit.asStateFlow()
+
+    private val _precipUnit = MutableStateFlow(repository.getSavedPrecipitationUnit())
+    val precipUnit = _precipUnit.asStateFlow()
+
+    private val _notificationsEnabled = MutableStateFlow(true)
+    val notificationsEnabled = _notificationsEnabled.asStateFlow()
+
+    private val _statusBarEnabled = MutableStateFlow(true)
+    val statusBarEnabled = _statusBarEnabled.asStateFlow()
 
     private val _locationState = MutableStateFlow<Location?>(null)
     val locationState: StateFlow<Location?> = _locationState.asStateFlow()
@@ -60,6 +81,43 @@ class WeatherViewModel
         }
     }
 
+    fun updateSettings(
+        temp: String? = null,
+        time: String? = null,
+        wind: String? = null,
+        pressure: String? = null,
+        precipitation: String? = null
+    ) {
+        viewModelScope.launch {
+            temp?.let {
+                repository.saveInitialSetup(it, _timeFormat.value, _windUnit.value)
+                _tempUnit.value = it
+            }
+            wind?.let {
+                repository.saveInitialSetup(_tempUnit.value, _timeFormat.value, it)
+                _windUnit.value = it
+            }
+            time?.let {
+                val normalizedTime = if (it.contains("12")) "12h" else "24h"
+                repository.saveInitialSetup(_tempUnit.value, normalizedTime, _windUnit.value)
+                _timeFormat.value = normalizedTime
+            }
+            pressure?.let { 
+                repository.savePressureUnit(it)
+                _pressureUnit.value = it
+            }
+            precipitation?.let { 
+                repository.savePrecipitationUnit(it)
+                _precipUnit.value = it
+            }
+
+            _locationState.value?.let { fetchWeather(it.latitude, it.longitude, _addressState.value) }
+        }
+    }
+
+    fun toggleNotifications(enabled: Boolean) { _notificationsEnabled.value = enabled }
+    fun toggleStatusBar(enabled: Boolean) { _statusBarEnabled.value = enabled }
+
     fun startGettingLocation() {
         locationHelper.getFreshLocation { location ->
             _locationState.value = location
@@ -77,82 +135,55 @@ class WeatherViewModel
                 val addresses = geocoder.getFromLocation(location.latitude, location.longitude, 1)
                 if (!addresses.isNullOrEmpty()) {
                     val address = addresses[0]
-                    val addressText =
-                        "${address.thoroughfare ?: context.getString(R.string.unknown_street)}, ${address.locality ?: context.getString(R.string.unknown_city)}"
-                    withContext(Dispatchers.Main) {
-                        _addressState.value = addressText
-                    }
+                    val addressText = "${address.thoroughfare ?: context.getString(R.string.unknown_street)}, ${address.locality ?: context.getString(R.string.unknown_city)}"
+                    withContext(Dispatchers.Main) { _addressState.value = addressText }
                     addressText
                 } else {
                     val fallback = context.getString(R.string.address_not_found)
-                    withContext(Dispatchers.Main) {
-                        _addressState.value = fallback
-                    }
+                    withContext(Dispatchers.Main) { _addressState.value = fallback }
                     fallback
                 }
             } catch (e: Exception) {
                 val fallback = context.getString(R.string.address_not_found)
-                withContext(Dispatchers.Main) {
-                    _addressState.value = fallback
-                }
+                withContext(Dispatchers.Main) { _addressState.value = fallback }
                 fallback
             }
         }
     }
 
-
     fun onSetupDoneClicked(tempUnit: String, timeFormat: String, windUnit: String) {
         viewModelScope.launch {
-            repository.saveInitialSetup(tempUnit, timeFormat, windUnit)
+            val normalizedTime = if (timeFormat.contains("12")) "12h" else "24h"
+            repository.saveInitialSetup(tempUnit, normalizedTime, windUnit)
+            _tempUnit.value = tempUnit
+            _timeFormat.value = normalizedTime
+            _windUnit.value = windUnit
             _uiState.value = WeatherUiState.Loading
             _eventFlow.emit(WeatherEvent.SetupCompleted)
-            checkStatusAndFetch(
-                isPermissionGranted = false,
-                isNetworkAvailable = true,
-                isGpsEnabled = true
-            )
-        }
-
-    }
-
-    fun onMenuClicked() {
-        viewModelScope.launch {
-            _eventFlow.emit(WeatherEvent.OpenNavigationDrawer)
+            checkStatusAndFetch(false, true, true)
         }
     }
 
-    fun onPageIndicatorClicked(pageIndex: Int) {
-        viewModelScope.launch {
-            _eventFlow.emit(WeatherEvent.ScrollToPage(pageIndex))
-        }
-    }
+    fun onMenuClicked() { viewModelScope.launch { _eventFlow.emit(WeatherEvent.OpenNavigationDrawer) } }
+    fun onPageIndicatorClicked(pageIndex: Int) { viewModelScope.launch { _eventFlow.emit(WeatherEvent.ScrollToPage(pageIndex)) } }
 
-    fun checkStatusAndFetch(
-        isPermissionGranted: Boolean,
-        isNetworkAvailable: Boolean,
-        isGpsEnabled: Boolean
-    ) {
+    fun checkStatusAndFetch(isPermissionGranted: Boolean, isNetworkAvailable: Boolean, isGpsEnabled: Boolean) {
         viewModelScope.launch {
             if (!isPermissionGranted) {
                 isSplashLoading.value = false
                 _eventFlow.emit(WeatherEvent.RequestLocationPermission)
                 return@launch
             }
-
             if (!isNetworkAvailable) {
                 isSplashLoading.value = false
                 _uiState.value = WeatherUiState.Error(context.getString(R.string.no_internet_error))
-                _eventFlow.emit(WeatherEvent.NetworkNotFound)
                 return@launch
             }
-
             if (!isGpsEnabled) {
                 isSplashLoading.value = false
                 _uiState.value = WeatherUiState.Error(context.getString(R.string.enable_gps_error))
-                _eventFlow.emit(WeatherEvent.GpsNotEnabled)
                 return@launch
             }
-
             _uiState.value = WeatherUiState.Loading
             startGettingLocation()
         }
@@ -163,14 +194,19 @@ class WeatherViewModel
             val unitSymbol = repository.getUserUnitSymbol()
             val timeFormat = repository.getSavedTimeFormat()
             val windUnit = repository.getSavedWindUnit()
+            val pressureUnit = repository.getSavedPressureUnit()
+            val precipUnit = repository.getSavedPrecipitationUnit()
+
             repository.getHomeWeather(lat, lon, BuildConfig.API_KEY)
                 .onSuccess { data ->
                     _uiState.value = WeatherUiState.Success(
-                        processWeatherData(data),
-                        unitSymbol,
-                        timeFormat,
-                        windUnit,
-                        address
+                        data = processWeatherData(data),
+                        unit = unitSymbol,
+                        timeFormat = timeFormat,
+                        windUnit = windUnit,
+                        pressureUnit = pressureUnit,
+                        precipUnit = precipUnit,
+                        address = address
                     )
                     isSplashLoading.value = false
                 }.onFailure {
@@ -180,14 +216,40 @@ class WeatherViewModel
         }
     }
 
-
     private fun processWeatherData(data: FullWeatherData): FullWeatherData {
-        val hourly = data.forecast.list.take(8)
-        val daily = data.forecast.list.filter { it.dtTxt.contains("12:00:00") }
-        return data.copy(forecast = data.forecast.copy(list = hourly + daily))
+        val windUnit = repository.getSavedWindUnit()
+        val pressureUnit = repository.getSavedPressureUnit()
+        val tempUnit = repository.getUserUnitSymbol()
+
+        val updatedCurrent = data.current.copy(
+            wind = data.current.wind.copy(
+                speed = UnitConverter.convertWindSpeed(data.current.wind.speed, tempUnit, windUnit).toDouble()
+            ),
+            main = data.current.main.copy(
+                pressure = UnitConverter.convertPressure(data.current.main.pressure, pressureUnit).toDouble().toInt()
+            )
+        )
+
+        val updatedForecastList = data.forecast.list.map { item ->
+            item.copy(
+                wind = item.wind.copy(
+                    speed = UnitConverter.convertWindSpeed(item.wind.speed, tempUnit, windUnit).toDouble()
+                ),
+                main = item.main.copy(
+                    pressure = UnitConverter.convertPressure(item.main.pressure, pressureUnit).toDouble().toInt()
+                )
+            )
+        }
+
+        val hourly = updatedForecastList.take(8)
+        val daily = updatedForecastList.filter { it.dtTxt.contains("12:00:00") }
+
+        return data.copy(
+            current = updatedCurrent,
+            forecast = data.forecast.copy(list = hourly + daily)
+        )
     }
 }
-
 
 @Suppress("UNCHECKED_CAST")
 class WeatherViewModelFactory(

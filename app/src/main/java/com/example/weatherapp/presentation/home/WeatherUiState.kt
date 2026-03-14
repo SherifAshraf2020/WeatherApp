@@ -11,6 +11,8 @@ sealed class WeatherUiState {
         val unit: String,
         val timeFormat: String,
         val windUnit: String,
+        val pressureUnit: String,
+        val precipUnit: String,
         val address: String = ""
     ) : WeatherUiState()
     data class Error(val message: String) : WeatherUiState()

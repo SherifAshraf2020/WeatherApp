@@ -3,6 +3,7 @@ package com.example.weatherapp.data.models.current
 import com.example.weatherapp.data.models.common.Clouds
 import com.example.weatherapp.data.models.common.Coord
 import com.example.weatherapp.data.models.common.Main
+import com.example.weatherapp.data.models.common.Rain
 import com.example.weatherapp.data.models.common.Sys
 import com.example.weatherapp.data.models.common.Weather
 import com.example.weatherapp.data.models.common.Wind
@@ -25,6 +26,8 @@ data class CurrentWeatherResponse(
     val main: Main,
     @SerializedName("name")
     val name: String,
+    @SerializedName("rain")
+    val rain: Rain? = null,
     @SerializedName("sys")
     val sys: Sys,
     @SerializedName("timezone")

@@ -28,6 +28,8 @@ class FavoriteDetailsViewModel(
             val unit = repository.getUserUnitSymbol()
             val timeFormat = repository.getSavedTimeFormat()
             val windUnit = repository.getSavedWindUnit()
+            val pressureUnit = repository.getSavedPressureUnit()
+            val precipUnit = repository.getSavedPrecipitationUnit()
 
             repository.getHomeWeather(lat, lon, BuildConfig.API_KEY)
                 .onSuccess { data ->
@@ -36,6 +38,8 @@ class FavoriteDetailsViewModel(
                         unit = unit,
                         timeFormat = timeFormat,
                         windUnit = windUnit,
+                        pressureUnit = pressureUnit,
+                        precipUnit = precipUnit,
                         address = ""
                     )
                 }
