@@ -24,6 +24,7 @@ import com.example.weatherapp.data.datasource.local.WeatherLocalDataSource
 import com.example.weatherapp.data.datasource.remote.WeatherRemoteDataSource
 import com.example.weatherapp.data.db.WeatherDatabase
 import com.example.weatherapp.data.repository.WeatherRepository
+import com.example.weatherapp.data.util.LocaleHelper
 import com.example.weatherapp.presentation.*
 import com.example.weatherapp.presentation.FavoriteDetailsScreen.FavoriteDetailsScreen
 import com.example.weatherapp.presentation.home.*
@@ -39,6 +40,11 @@ class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
+
+        val preferenceManager = PreferenceManager(applicationContext)
+        val currentLang = preferenceManager.getLanguage() ?: "en"
+        LocaleHelper.applyLocale(this, currentLang)
+
         super.onCreate(savedInstanceState)
 
         Configuration.getInstance().load(
@@ -48,7 +54,6 @@ class MainActivity : ComponentActivity() {
 
         enableEdgeToEdge()
 
-        val preferenceManager = PreferenceManager(applicationContext)
         val locationHelper = FusedLocationHelper(applicationContext)
         val database = WeatherDatabase.getDatabase(applicationContext)
         val localDataSource = WeatherLocalDataSource(database.favoriteDao())
@@ -96,6 +101,9 @@ class MainActivity : ComponentActivity() {
                             }
                             is WeatherEvent.NetworkNotFound -> {
                                 Toast.makeText(this@MainActivity, getString(R.string.no_internet_error), Toast.LENGTH_LONG).show()
+                            }
+                            is WeatherEvent.LanguageChanged -> {
+                                recreate()
                             }
                             else -> {}
                         }
