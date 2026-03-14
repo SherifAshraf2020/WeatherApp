@@ -13,6 +13,8 @@ class PreferenceManager(context: Context) {
         private const val KEY_TEMP_UNIT = "temp_unit"
         private const val KEY_TIME_FORMAT = "time_format"
         private const val KEY_WIND_UNIT = "wind_unit"
+        private const val PREF_PRESSURE_UNIT = "pressure_unit"
+        private const val PREF_PRECIP_UNIT = "precip_unit"
     }
 
     fun isFirstRun(): Boolean = sharedPreferences.getBoolean(KEY_IS_FIRST_RUN, true)
@@ -34,4 +36,16 @@ class PreferenceManager(context: Context) {
     fun getTempUnit(): String = sharedPreferences.getString(KEY_TEMP_UNIT, "C") ?: "C"
     fun getTimeFormat(): String = sharedPreferences.getString(KEY_TIME_FORMAT, "24h") ?: "24h"
     fun getWindUnit(): String = sharedPreferences.getString(KEY_WIND_UNIT, "m/s") ?: "m/s"
+
+    fun savePressureUnit(unit: String) {
+        sharedPreferences.edit().putString(PREF_PRESSURE_UNIT, unit).apply()
+    }
+
+    fun getPressureUnit(): String = sharedPreferences.getString(PREF_PRESSURE_UNIT, "hPa") ?: "hPa"
+
+    fun savePrecipitationUnit(unit: String) {
+        sharedPreferences.edit().putString(PREF_PRECIP_UNIT, unit).apply()
+    }
+
+    fun getPrecipitationUnit(): String = sharedPreferences.getString(PREF_PRECIP_UNIT, "mm") ?: "mm"
 }

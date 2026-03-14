@@ -14,7 +14,6 @@ class WeatherRepository(
     private val preferenceManager: PreferenceManager
 ) {
 
-
     fun getSavedFavorites(): Flow<List<FavoriteEntity>> {
         return localDataSource.getFavorites()
     }
@@ -26,7 +25,6 @@ class WeatherRepository(
     suspend fun removeFromFavorites(favorite: FavoriteEntity) {
         localDataSource.removeFavorite(favorite)
     }
-
 
     suspend fun getHomeWeather(lat: Double, lon: Double, apiKey: String): Result<FullWeatherData> {
         val selectedUnit = preferenceManager.getTempUnit()
@@ -53,7 +51,6 @@ class WeatherRepository(
         }
     }
 
-
     fun getUserUnitSymbol(): String {
         val unit = preferenceManager.getTempUnit()
         return if (unit == "imperial" || unit == "F") "F" else "C"
@@ -74,5 +71,21 @@ class WeatherRepository(
 
     fun getSavedWindUnit(): String {
         return preferenceManager.getWindUnit()
+    }
+
+    fun savePressureUnit(unit: String) {
+        preferenceManager.savePressureUnit(unit)
+    }
+
+    fun getSavedPressureUnit(): String {
+        return preferenceManager.getPressureUnit()
+    }
+
+    fun savePrecipitationUnit(unit: String) {
+        preferenceManager.savePrecipitationUnit(unit)
+    }
+
+    fun getSavedPrecipitationUnit(): String {
+        return preferenceManager.getPrecipitationUnit()
     }
 }
