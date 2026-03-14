@@ -6,6 +6,8 @@
     <string name="temp_label">درجة الحرارة</string>
     <string name="time_label">تنسيق الوقت</string>
     <string name="wind_label">سرعة الرياح</string>
+    <string name="pressure_label">الضغط</string>
+    <string name="precip_label">هطول الأمطار</string>
     <string name="notif_label">التنبيهات</string>
     <string name="status_label">شريط الحالة</string>
     <string name="btn_done">تم</string>
@@ -29,7 +31,6 @@
     <string name="hourly_forecast">التوقعات الساعية</string>
     <string name="next_5_days">الأيام الخمسة القادمة</string>
     <string name="humidity_label">الرطوبة</string>
-    <string name="pressure_label">الضغط</string>
     <string name="clouds_label">السحب</string>
     <string name="wind_unit_kmh">كم/ساعة</string>
 
@@ -56,4 +57,10 @@
     <string name="loading">جاري التحميل…</string>
     <string name="unknown">غير معروف</string>
     <string name="new_location">موقع جديد</string>
+
+
+    <string name="languages_label">اللغات</string>
+    <string name="language_dialog_title">اختر اللغة</string>
+    <string name="developer_label">المطور</string>
+    <string name="privacy_policy_label">سياسة الخصوصية</string>
 </resources>

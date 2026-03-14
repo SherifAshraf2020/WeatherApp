@@ -6,6 +6,8 @@
     <string name="temp_label">Temperature</string>
     <string name="time_label">Time format</string>
     <string name="wind_label">Wind speed</string>
+    <string name="pressure_label">Pressure</string>
+    <string name="precip_label">Precipitation</string>
     <string name="notif_label">Notification</string>
     <string name="status_label">Status bar</string>
     <string name="btn_done">DONE</string>
@@ -31,7 +33,6 @@
     <string name="hourly_forecast">Hourly Forecast</string>
     <string name="next_5_days">Next 5 Days</string>
     <string name="humidity_label">Humidity</string>
-    <string name="pressure_label">Pressure</string>
     <string name="clouds_label">Clouds</string>
     <string name="wind_unit_kmh">km/h</string>
 
@@ -59,4 +60,9 @@
     <string name="loading">Loading…</string>
     <string name="unknown">Unknown</string>
     <string name="new_location">New Location</string>
+
+    <string name="languages_label">Languages</string>
+    <string name="language_dialog_title">Select Language</string>
+    <string name="developer_label">DEVELOPER</string>
+    <string name="privacy_policy_label">Privacy Policy</string>
 </resources>
