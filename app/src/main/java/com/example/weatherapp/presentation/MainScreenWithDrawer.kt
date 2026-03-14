@@ -62,6 +62,7 @@ fun MainScreenWithDrawer(
                 drawerShape = RoundedCornerShape(0.dp)
             ) {
                 DrawerMenuContent(
+                    viewModel = viewModel,
                     currentPage = pagerState.currentPage,
                     onItemClick = { page ->
                         scope.launch {
@@ -115,7 +116,6 @@ fun MainScreenWithDrawer(
                     }
                 }
 
-                // Pager Indicators
                 Box(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
@@ -149,7 +149,7 @@ fun MainScreenWithDrawer(
     }
 
     if (showUnitDialog) {
-        UnitSettingsDialog(onDismiss = { showUnitDialog = false })
+        UnitSettingsDialog(viewModel = viewModel, onDismiss = { showUnitDialog = false })
     }
     if (showLanguageDialog) {
         LanguageSelectionDialog(onDismiss = { showLanguageDialog = false })
@@ -177,6 +177,8 @@ fun WeatherLogicContainer(state: WeatherUiState, viewModel: WeatherViewModel) {
                     unit = state.unit,
                     timeFormat = state.timeFormat,
                     windUnit = state.windUnit,
+                    pressureUnit = state.pressureUnit,
+                    precipitationUnit = state.precipUnit,
                     address = state.address
                 )
             }

@@ -30,6 +30,7 @@ import com.example.weatherapp.R
 import com.example.weatherapp.data.models.current.CurrentWeatherResponse
 import com.example.weatherapp.data.models.forecast.ForecastItem
 import com.example.weatherapp.data.models.home.FullWeatherData
+import com.example.weatherapp.data.util.UnitConverter
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -42,6 +43,8 @@ fun CurrentWeatherScreen(
     unit: String,
     timeFormat: String,
     windUnit: String,
+    pressureUnit: String,
+    precipitationUnit: String,
     address: String = ""
 ) {
     val current = data.current
@@ -68,7 +71,13 @@ fun CurrentWeatherScreen(
             }
 
             item {
-                WeatherExtraDetails(current, windUnit)
+                WeatherExtraDetails(
+                    current = current,
+                    tempUnit = unit,
+                    windUnit = windUnit,
+                    pressureUnit = pressureUnit,
+                    precipitationUnit = precipitationUnit
+                )
             }
 
             item {
@@ -88,8 +97,8 @@ fun CurrentWeatherScreen(
                 )
                 val distinctForecast = data.forecast.list
                     .filter {
-                        val date = LocalDate.parse(it.dtTxt.split(" ")[0])
-                        date.isAfter(todayDate)
+                        val datePart = it.dtTxt.split(" ")[0]
+                        runCatching { LocalDate.parse(datePart) }.getOrNull()?.isAfter(todayDate) == true
                     }
                     .distinctBy { it.dtTxt.split(" ")[0] }
                     .take(5)
@@ -204,18 +213,35 @@ fun MainWeatherHeader(
 }
 
 @Composable
-fun WeatherExtraDetails(current: CurrentWeatherResponse, windUnit: String) {
+fun WeatherExtraDetails(
+    current: CurrentWeatherResponse,
+    tempUnit: String,
+    windUnit: String,
+    pressureUnit: String,
+    precipitationUnit: String
+) {
+    val convertedWind = UnitConverter.convertWindSpeed(current.wind.speed, tempUnit, windUnit)
+    val convertedPressure = UnitConverter.convertPressure(current.main.pressure, pressureUnit)
+    val rainValue = current.rain?.h1 ?: current.rain?.h3 ?: 0.0
+    val convertedPrecipitation = UnitConverter.convertPrecipitation(rainValue, precipitationUnit)
+
     Surface(
         modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
         color = Color.Black.copy(0.25f),
         shape = RoundedCornerShape(20.dp),
         border = BorderStroke(0.5.dp, Color.White.copy(0.1f))
     ) {
-        Row(modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-            DetailItem(stringResource(id = R.string.wind_label), "${current.wind.speed} $windUnit", Icons.Rounded.Air)
-            DetailItem(stringResource(id = R.string.humidity_label), "${current.main.humidity}%", Icons.Rounded.WaterDrop)
-            DetailItem(stringResource(id = R.string.pressure_label), "${current.main.pressure}", Icons.Rounded.Compress)
-            DetailItem(stringResource(id = R.string.clouds_label), "${current.clouds.all}%", Icons.Rounded.Cloud)
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                DetailItem(stringResource(id = R.string.wind_label), "$convertedWind $windUnit", Icons.Rounded.Air)
+                DetailItem(stringResource(id = R.string.humidity_label), "${current.main.humidity}%", Icons.Rounded.WaterDrop)
+                DetailItem(stringResource(id = R.string.pressure_label), "$convertedPressure $pressureUnit", Icons.Rounded.Compress)
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                DetailItem("Precipitation", "$convertedPrecipitation $precipitationUnit", Icons.Rounded.InvertColors)
+                DetailItem(stringResource(id = R.string.clouds_label), "${current.clouds.all}%", Icons.Rounded.Cloud)
+            }
         }
     }
 }
@@ -245,11 +271,16 @@ fun HourlyForecastCard(list: List<ForecastItem>, timeFormat: String) {
             horizontalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             items(list) { hour ->
-                val time = LocalDateTime.parse(hour.dtTxt, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(time.format(DateTimeFormatter.ofPattern(timePattern)), color = Color.White, fontSize = 12.sp)
-                    Icon(getWeatherIcon(hour.weather.firstOrNull()?.main), null, tint = Color.White, modifier = Modifier.size(26.dp))
-                    Text("${hour.main.temp.toInt()}°", color = Color.White, fontWeight = FontWeight.Bold)
+                val timeResult = runCatching {
+                    LocalDateTime.parse(hour.dtTxt, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                }.getOrNull()
+                
+                if (timeResult != null) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(timeResult.format(DateTimeFormatter.ofPattern(timePattern)), color = Color.White, fontSize = 12.sp)
+                        Icon(getWeatherIcon(hour.weather.firstOrNull()?.main), null, tint = Color.White, modifier = Modifier.size(26.dp))
+                        Text("${hour.main.temp.toInt()}°", color = Color.White, fontWeight = FontWeight.Bold)
+                    }
                 }
             }
         }
@@ -270,17 +301,22 @@ fun DailyForecastCard(list: List<ForecastItem>) {
             horizontalArrangement = Arrangement.SpaceAround
         ) {
             list.forEach { day ->
-                val date = LocalDateTime.parse(day.dtTxt, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = date.format(DateTimeFormatter.ofPattern("EEE", locale)),
-                        color = Color.White.copy(0.7f),
-                        fontSize = 12.sp
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Icon(getWeatherIcon(day.weather.firstOrNull()?.main), null, tint = Color.White, modifier = Modifier.size(28.dp))
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text("${day.main.temp.toInt()}°", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                val dateResult = runCatching {
+                    LocalDateTime.parse(day.dtTxt, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                }.getOrNull()
+                
+                if (dateResult != null) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = dateResult.format(DateTimeFormatter.ofPattern("EEE", locale)),
+                            color = Color.White.copy(0.7f),
+                            fontSize = 12.sp
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Icon(getWeatherIcon(day.weather.firstOrNull()?.main), null, tint = Color.White, modifier = Modifier.size(28.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text("${day.main.temp.toInt()}°", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    }
                 }
             }
         }

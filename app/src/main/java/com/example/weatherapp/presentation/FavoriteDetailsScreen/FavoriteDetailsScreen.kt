@@ -72,7 +72,9 @@ fun FavoriteDetailsScreen(
                         data = state.data,
                         unit = state.unit,
                         timeFormat = state.timeFormat,
-                        windUnit = state.windUnit
+                        windUnit = state.windUnit,
+                        pressureUnit = state.pressureUnit,
+                        precipitationUnit = state.precipUnit
                     )
                 }
                 else -> {}
