@@ -3,6 +3,7 @@ package com.example.weatherapp.data.datasource.local
 import android.content.Context
 import android.content.SharedPreferences
 import com.example.weatherapp.data.Constants
+import java.util.Locale
 
 class PreferenceManager(context: Context) {
     private val sharedPreferences: SharedPreferences =
@@ -48,4 +49,12 @@ class PreferenceManager(context: Context) {
     }
 
     fun getPrecipitationUnit(): String = sharedPreferences.getString(PREF_PRECIP_UNIT, "mm") ?: "mm"
+
+    fun saveLanguage(langCode: String) {
+        sharedPreferences.edit().putString("language_key", langCode).apply()
+    }
+
+    fun getLanguage(): String {
+        return sharedPreferences.getString("language_key", Locale.getDefault().language) ?: "en"
+    }
 }

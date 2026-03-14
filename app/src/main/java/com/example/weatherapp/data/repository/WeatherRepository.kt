@@ -35,8 +35,10 @@ class WeatherRepository(
             else -> "metric"
         }
 
-        val currentResult = remoteDataSource.getCurrentWeather(lat, lon, apiUnit, apiKey)
-        val forecastResult = remoteDataSource.getForecast(lat, lon, apiKey, apiUnit)
+        val selectedLang = preferenceManager.getLanguage() ?: "en"
+
+        val currentResult = remoteDataSource.getCurrentWeather(lat, lon, apiUnit, apiKey, selectedLang)
+        val forecastResult = remoteDataSource.getForecast(lat, lon, apiKey, apiUnit, selectedLang)
 
         return if (currentResult.isSuccess && forecastResult.isSuccess) {
             Result.success(
@@ -49,6 +51,15 @@ class WeatherRepository(
             val error = currentResult.exceptionOrNull() ?: forecastResult.exceptionOrNull()
             Result.failure(error ?: Exception(Constants.ERROR_FETCH_DATA))
         }
+    }
+
+
+    fun saveLanguage(lang: String) {
+        preferenceManager.saveLanguage(lang)
+    }
+
+    fun getSavedLanguage(): String {
+        return preferenceManager.getLanguage() ?: "en"
     }
 
     fun getUserUnitSymbol(): String {
