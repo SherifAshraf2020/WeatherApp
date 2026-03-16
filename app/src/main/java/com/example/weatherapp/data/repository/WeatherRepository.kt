@@ -99,4 +99,21 @@ class WeatherRepository(
     fun getSavedPrecipitationUnit(): String {
         return preferenceManager.getPrecipitationUnit()
     }
+
+
+    fun isNotificationsEnabled(): Boolean {
+        return preferenceManager.isNotificationsEnabled()
+    }
+
+    fun setNotificationsEnabled(enabled: Boolean) {
+        preferenceManager.setNotificationsEnabled(enabled)
+    }
+
+    fun isStatusBarEnabled(): Boolean {
+        return preferenceManager.isStatusBarEnabled()
+    }
+
+    fun setStatusBarEnabled(enabled: Boolean) {
+        preferenceManager.setStatusBarEnabled(enabled)
+    }
 }
