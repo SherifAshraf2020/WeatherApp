@@ -57,4 +57,21 @@ class PreferenceManager(context: Context) {
     fun getLanguage(): String {
         return sharedPreferences.getString("language_key", Locale.getDefault().language) ?: "en"
     }
+
+
+    fun isNotificationsEnabled(): Boolean {
+        return sharedPreferences.getBoolean("notifications_enabled", true)
+    }
+
+    fun setNotificationsEnabled(enabled: Boolean) {
+        sharedPreferences.edit().putBoolean("notifications_enabled", enabled).apply()
+    }
+
+    fun isStatusBarEnabled(): Boolean {
+        return sharedPreferences.getBoolean("status_bar_enabled", true)
+    }
+
+    fun setStatusBarEnabled(enabled: Boolean) {
+        sharedPreferences.edit().putBoolean("status_bar_enabled", enabled).apply()
+    }
 }
