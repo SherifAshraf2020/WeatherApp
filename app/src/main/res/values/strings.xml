@@ -17,6 +17,8 @@
     <string name="unit_c">C</string>
     <string name="unit_12h">12</string>
     <string name="unit_24h">24</string>
+    <string name="unit_mm">mm</string>
+    <string name="unit_in">in</string>
 
 
     <string name="menu_home">Home</string>
@@ -65,4 +67,17 @@
     <string name="language_dialog_title">Select Language</string>
     <string name="developer_label">DEVELOPER</string>
     <string name="privacy_policy_label">Privacy Policy</string>
+
+
+    <string name="set_alert_time">Set Weather Alert Time</string>
+    <string name="label_notification">Notification</string>
+    <string name="label_alarm">Alarm</string>
+    <string name="btn_save_alert">Schedule Alert</string>
+
+    <string name="type_notification">NOTIFICATION</string>
+    <string name="type_alarm">ALARM</string>
+
+    <string name="success_scheduled">Alert scheduled successfully!</string>
+    <string name="error_invalid_time">Invalid time! Please select a future time.</string>
+    <string name="permission_denied">Notification permission is required for alerts.</string>
 </resources>

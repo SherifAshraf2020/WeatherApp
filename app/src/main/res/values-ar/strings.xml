@@ -17,6 +17,8 @@
     <string name="unit_c">سيليزيوس</string>
     <string name="unit_12h">12 ساعة</string>
     <string name="unit_24h">24 ساعة</string>
+    <string name="unit_mm">ملم</string>
+    <string name="unit_in">بوصة</string>
 
     <string name="menu_home">الرئيسية</string>
     <string name="menu_alerts">التنبيهات</string>
@@ -63,4 +65,18 @@
     <string name="language_dialog_title">اختر اللغة</string>
     <string name="developer_label">المطور</string>
     <string name="privacy_policy_label">سياسة الخصوصية</string>
+
+
+
+    <string name="set_alert_time">ضبط وقت تنبيهات الطقس</string>
+    <string name="label_notification">إشعار</string>
+    <string name="label_alarm">منبه</string>
+    <string name="btn_save_alert">جدولة التنبيه</string>
+
+    <string name="type_notification">NOTIFICATION</string>
+    <string name="type_alarm">ALARM</string>
+
+    <string name="success_scheduled">تم جدولة التنبيه بنجاح!</string>
+    <string name="error_invalid_time">وقت غير صالح! يرجى اختيار وقت في المستقبل.</string>
+    <string name="permission_denied">إذن الإشعارات مطلوب لتشغيل التنبيهات.</string>
 </resources>
