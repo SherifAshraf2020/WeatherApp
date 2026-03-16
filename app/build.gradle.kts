@@ -111,4 +111,20 @@ dependencies {
 
     implementation(libs.androidx.core.ktx.v1120)
 
+
+    // --- 1. Local Unit Tests (Directly for your Business Logic) ---
+    testImplementation(libs.core.ktx)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.junit.ktx)
+    testImplementation(libs.jetbrains.kotlinx.coroutines.test)
+    testImplementation(libs.core.testing)
+    testImplementation(libs.mockk)
+
+    // --- 2. Instrumented Tests (UI & Framework Integration) ---
+    androidTestImplementation(libs.core.testing)
+    androidTestImplementation(libs.jetbrains.kotlinx.coroutines.test)
+
+    // --- 3. Kotlin & Extensions ---
+    implementation(libs.androidx.fragment.ktx)
+
 }
