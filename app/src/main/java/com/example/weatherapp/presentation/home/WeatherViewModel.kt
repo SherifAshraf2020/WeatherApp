@@ -1,9 +1,13 @@
 package com.example.weatherapp.presentation.home
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
 import android.location.Geocoder
 import android.location.Location
+import android.os.Build
 import androidx.compose.runtime.mutableStateOf
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -44,10 +48,10 @@ class WeatherViewModel(
     private val _precipUnit = MutableStateFlow(repository.getSavedPrecipitationUnit())
     val precipUnit = _precipUnit.asStateFlow()
 
-    private val _notificationsEnabled = MutableStateFlow(true)
+    private val _notificationsEnabled = MutableStateFlow(repository.isNotificationsEnabled())
     val notificationsEnabled = _notificationsEnabled.asStateFlow()
 
-    private val _statusBarEnabled = MutableStateFlow(true)
+    private val _statusBarEnabled = MutableStateFlow(repository.isStatusBarEnabled())
     val statusBarEnabled = _statusBarEnabled.asStateFlow()
 
     private val _locationState = MutableStateFlow<Location?>(null)
@@ -105,11 +109,11 @@ class WeatherViewModel(
                 repository.saveInitialSetup(_tempUnit.value, normalizedTime, _windUnit.value)
                 _timeFormat.value = normalizedTime
             }
-            pressure?.let { 
+            pressure?.let {
                 repository.savePressureUnit(it)
                 _pressureUnit.value = it
             }
-            precipitation?.let { 
+            precipitation?.let {
                 repository.savePrecipitationUnit(it)
                 _precipUnit.value = it
             }
@@ -122,9 +126,7 @@ class WeatherViewModel(
         viewModelScope.launch {
             repository.saveLanguage(langCode)
             _language.value = langCode
-
             _eventFlow.emit(WeatherEvent.LanguageChanged)
-
             _locationState.value?.let {
                 val address = updateAddress(it)
                 fetchWeather(it.latitude, it.longitude, address)
@@ -132,8 +134,27 @@ class WeatherViewModel(
         }
     }
 
-    fun toggleNotifications(enabled: Boolean) { _notificationsEnabled.value = enabled }
-    fun toggleStatusBar(enabled: Boolean) { _statusBarEnabled.value = enabled }
+    fun toggleNotifications(enabled: Boolean) {
+        if (enabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val hasPermission = ContextCompat.checkSelfPermission(
+                context, Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+
+            if (!hasPermission) {
+                viewModelScope.launch {
+                    _eventFlow.emit(WeatherEvent.RequestNotificationPermission)
+                }
+                return
+            }
+        }
+        _notificationsEnabled.value = enabled
+        repository.setNotificationsEnabled(enabled)
+    }
+
+    fun toggleStatusBar(enabled: Boolean) {
+        _statusBarEnabled.value = enabled
+        repository.setStatusBarEnabled(enabled)
+    }
 
     fun startGettingLocation() {
         locationHelper.getFreshLocation { location ->
@@ -168,13 +189,25 @@ class WeatherViewModel(
         }
     }
 
-    fun onSetupDoneClicked(tempUnit: String, timeFormat: String, windUnit: String) {
+    fun onSetupDoneClicked(
+        tempUnit: String,
+        timeFormat: String,
+        windUnit: String,
+        notificationsEnabled: Boolean,
+        statusBarEnabled: Boolean
+    ) {
         viewModelScope.launch {
             val normalizedTime = if (timeFormat.contains("12")) "12h" else "24h"
             repository.saveInitialSetup(tempUnit, normalizedTime, windUnit)
+            repository.setNotificationsEnabled(notificationsEnabled)
+            repository.setStatusBarEnabled(statusBarEnabled)
+
             _tempUnit.value = tempUnit
             _timeFormat.value = normalizedTime
             _windUnit.value = windUnit
+            _notificationsEnabled.value = notificationsEnabled
+            _statusBarEnabled.value = statusBarEnabled
+
             _uiState.value = WeatherUiState.Loading
             _eventFlow.emit(WeatherEvent.SetupCompleted)
             checkStatusAndFetch(false, true, true)
