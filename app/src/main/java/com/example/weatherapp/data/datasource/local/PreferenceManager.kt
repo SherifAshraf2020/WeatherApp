@@ -5,7 +5,7 @@ import android.content.SharedPreferences
 import com.example.weatherapp.data.Constants
 import java.util.Locale
 
-class PreferenceManager(context: Context) {
+class PreferenceManager(context: Context): IPreferenceManager {
     private val sharedPreferences: SharedPreferences =
         context.getSharedPreferences(Constants.PREFS_NAME, Context.MODE_PRIVATE)
 
@@ -18,14 +18,14 @@ class PreferenceManager(context: Context) {
         private const val PREF_PRECIP_UNIT = "precip_unit"
     }
 
-    fun isFirstRun(): Boolean = sharedPreferences.getBoolean(KEY_IS_FIRST_RUN, true)
+    override fun isFirstRun(): Boolean = sharedPreferences.getBoolean(KEY_IS_FIRST_RUN, true)
 
 
-    fun setFirstRun(isFirstRun: Boolean) {
+    override fun setFirstRun(isFirstRun: Boolean) {
         sharedPreferences.edit().putBoolean(KEY_IS_FIRST_RUN, isFirstRun).apply()
     }
 
-    fun saveSettings(tempUnit: String, timeFormat: String, windUnit: String){
+    override fun saveSettings(tempUnit: String, timeFormat: String, windUnit: String){
         sharedPreferences.edit().apply(){
             putString(KEY_TEMP_UNIT, tempUnit)
             putString(KEY_TIME_FORMAT, timeFormat)
@@ -34,44 +34,44 @@ class PreferenceManager(context: Context) {
         }
     }
 
-    fun getTempUnit(): String = sharedPreferences.getString(KEY_TEMP_UNIT, "C") ?: "C"
-    fun getTimeFormat(): String = sharedPreferences.getString(KEY_TIME_FORMAT, "24h") ?: "24h"
-    fun getWindUnit(): String = sharedPreferences.getString(KEY_WIND_UNIT, "m/s") ?: "m/s"
+    override fun getTempUnit(): String = sharedPreferences.getString(KEY_TEMP_UNIT, "C") ?: "C"
+    override fun getTimeFormat(): String = sharedPreferences.getString(KEY_TIME_FORMAT, "24h") ?: "24h"
+    override fun getWindUnit(): String = sharedPreferences.getString(KEY_WIND_UNIT, "m/s") ?: "m/s"
 
-    fun savePressureUnit(unit: String) {
+    override fun savePressureUnit(unit: String) {
         sharedPreferences.edit().putString(PREF_PRESSURE_UNIT, unit).apply()
     }
 
-    fun getPressureUnit(): String = sharedPreferences.getString(PREF_PRESSURE_UNIT, "hPa") ?: "hPa"
+    override fun getPressureUnit(): String = sharedPreferences.getString(PREF_PRESSURE_UNIT, "hPa") ?: "hPa"
 
-    fun savePrecipitationUnit(unit: String) {
+    override fun savePrecipitationUnit(unit: String) {
         sharedPreferences.edit().putString(PREF_PRECIP_UNIT, unit).apply()
     }
 
-    fun getPrecipitationUnit(): String = sharedPreferences.getString(PREF_PRECIP_UNIT, "mm") ?: "mm"
+    override fun getPrecipitationUnit(): String = sharedPreferences.getString(PREF_PRECIP_UNIT, "mm") ?: "mm"
 
-    fun saveLanguage(langCode: String) {
+    override fun saveLanguage(langCode: String) {
         sharedPreferences.edit().putString("language_key", langCode).apply()
     }
 
-    fun getLanguage(): String {
+    override fun getLanguage(): String {
         return sharedPreferences.getString("language_key", Locale.getDefault().language) ?: "en"
     }
 
 
-    fun isNotificationsEnabled(): Boolean {
+    override fun isNotificationsEnabled(): Boolean {
         return sharedPreferences.getBoolean("notifications_enabled", true)
     }
 
-    fun setNotificationsEnabled(enabled: Boolean) {
+    override fun setNotificationsEnabled(enabled: Boolean) {
         sharedPreferences.edit().putBoolean("notifications_enabled", enabled).apply()
     }
 
-    fun isStatusBarEnabled(): Boolean {
+    override fun isStatusBarEnabled(): Boolean {
         return sharedPreferences.getBoolean("status_bar_enabled", true)
     }
 
-    fun setStatusBarEnabled(enabled: Boolean) {
+    override fun setStatusBarEnabled(enabled: Boolean) {
         sharedPreferences.edit().putBoolean("status_bar_enabled", enabled).apply()
     }
 }

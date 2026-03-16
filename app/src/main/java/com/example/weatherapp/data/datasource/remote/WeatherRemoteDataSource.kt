@@ -5,10 +5,10 @@ import com.example.weatherapp.data.models.current.CurrentWeatherResponse
 import com.example.weatherapp.data.models.forecast.ForecastResponse
 import com.example.weatherapp.data.network.Network
 
-class WeatherRemoteDataSource {
+class WeatherRemoteDataSource: IWeatherRemoteDataSource {
     private val weatherService: WeatherService = Network.weatherService
 
-    suspend fun getCurrentWeather(lat: Double, lon: Double, units: String, apiKey: String, lang: String): Result<CurrentWeatherResponse> {
+    override suspend fun getCurrentWeather(lat: Double, lon: Double, units: String, apiKey: String, lang: String): Result<CurrentWeatherResponse> {
         return try {
             val response = weatherService.getCurrentWeather(lat, lon, apiKey, units, lang)
             Log.d("WeatherAPI", "Raw response: ${response.body()}")
@@ -23,7 +23,7 @@ class WeatherRemoteDataSource {
         }
     }
 
-    suspend fun getForecast(lat: Double, lon: Double, apiKey: String, units: String, lang: String): Result<ForecastResponse> {
+    override suspend fun getForecast(lat: Double, lon: Double, apiKey: String, units: String, lang: String): Result<ForecastResponse> {
         return try {
             val response = weatherService.getForecast(lat, lon, apiKey, units, lang)
             Log.d("WeatherAPI", "Raw response: ${response.body()}")
