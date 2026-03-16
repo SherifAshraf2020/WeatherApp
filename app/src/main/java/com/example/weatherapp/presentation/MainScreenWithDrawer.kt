@@ -21,6 +21,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.weatherapp.R
+import com.example.weatherapp.presentation.alerts.AlertsScreen
+import com.example.weatherapp.presentation.alerts.AlertsViewModel
 import com.example.weatherapp.presentation.home.CurrentWeatherScreen
 import com.example.weatherapp.presentation.home.WeatherEvent
 import com.example.weatherapp.presentation.home.WeatherUiState
@@ -35,7 +37,8 @@ import kotlinx.coroutines.launch
 fun MainScreenWithDrawer(
     viewModel: WeatherViewModel,
     favoritesViewModel: FavoritesViewModel,
-    navController: NavHostController
+    navController: NavHostController,
+    alertsViewModel: AlertsViewModel
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -112,7 +115,7 @@ fun MainScreenWithDrawer(
                                 navController.navigate("weather_details/$lat/$lon/$city")
                             }
                         )
-                        2 -> AlertScreen()
+                        2 -> AlertsScreen(viewModel = alertsViewModel)
                     }
                 }
 
@@ -192,16 +195,6 @@ fun WeatherLogicContainer(state: WeatherUiState, viewModel: WeatherViewModel) {
                 }
             }
             else -> { Text(stringResource(id = R.string.setup_incomplete), color = Color.White) }
-        }
-    }
-}
-
-@Composable
-fun AlertScreen() {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(Icons.Default.NotificationsNone, null, modifier = Modifier.size(64.dp), tint = Color.LightGray)
-            Text(stringResource(id = R.string.no_alerts_text), style = MaterialTheme.typography.bodyLarge, color = Color.Gray)
         }
     }
 }

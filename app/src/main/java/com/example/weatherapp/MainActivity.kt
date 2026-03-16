@@ -1,6 +1,8 @@
 package com.example.weatherapp
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
@@ -13,6 +15,7 @@ import androidx.annotation.RequiresApi
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
@@ -27,6 +30,8 @@ import com.example.weatherapp.data.repository.WeatherRepository
 import com.example.weatherapp.data.util.LocaleHelper
 import com.example.weatherapp.presentation.*
 import com.example.weatherapp.presentation.FavoriteDetailsScreen.FavoriteDetailsScreen
+import com.example.weatherapp.presentation.alerts.AlertsViewModel
+import com.example.weatherapp.presentation.alerts.AlertsViewModelFactory
 import com.example.weatherapp.presentation.home.*
 import com.example.weatherapp.presentation.favorites.FavoritesViewModel
 import com.example.weatherapp.presentation.favorites.FavoritesViewModelFactory
@@ -66,35 +71,61 @@ class MainActivity : ComponentActivity() {
 
         val weatherFactory = WeatherViewModelFactory(repository, locationHelper, applicationContext)
         val favoritesFactory = FavoritesViewModelFactory(repository)
+        val alertsFactory = AlertsViewModelFactory(application)
 
         setContent {
             WeatherAppTheme {
                 val navController = rememberNavController()
                 val weatherViewModel: WeatherViewModel = viewModel(factory = weatherFactory)
                 val favoritesViewModel: FavoritesViewModel = viewModel(factory = favoritesFactory)
+                val alertsViewModel: AlertsViewModel = viewModel(factory = alertsFactory)
 
                 val permissionLauncher = rememberLauncherForActivityResult(
                     contract = ActivityResultContracts.RequestMultiplePermissions()
                 ) { permissions ->
-                    val isGranted = permissions.values.any { it }
+                    val locationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+                            permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+
+                    val notificationGranted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        permissions[Manifest.permission.POST_NOTIFICATIONS] == true
+                    } else true
+
+                    weatherViewModel.toggleNotifications(notificationGranted)
+
                     weatherViewModel.checkStatusAndFetch(
-                        isPermissionGranted = isGranted,
+                        isPermissionGranted = locationGranted,
                         isNetworkAvailable = isNetworkAvailable(),
                         isGpsEnabled = locationHelper.isLocationEnabled()
                     )
                 }
 
                 LaunchedEffect(Unit) {
-                    val isGranted = checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                    val isLocationGranted = ContextCompat.checkSelfPermission(
+                        this@MainActivity, Manifest.permission.ACCESS_FINE_LOCATION
+                    ) == PackageManager.PERMISSION_GRANTED
+
                     weatherViewModel.checkStatusAndFetch(
-                        isPermissionGranted = isGranted,
+                        isPermissionGranted = isLocationGranted,
                         isNetworkAvailable = isNetworkAvailable(),
                         isGpsEnabled = locationHelper.isLocationEnabled()
                     )
+
                     weatherViewModel.eventFlow.collect { event ->
                         when (event) {
                             is WeatherEvent.RequestLocationPermission -> {
-                                permissionLauncher.launch(arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION))
+                                val permissions = mutableListOf(
+                                    Manifest.permission.ACCESS_FINE_LOCATION,
+                                    Manifest.permission.ACCESS_COARSE_LOCATION
+                                )
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                    permissions.add(Manifest.permission.POST_NOTIFICATIONS)
+                                }
+                                permissionLauncher.launch(permissions.toTypedArray())
+                            }
+                            is WeatherEvent.RequestNotificationPermission -> {
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                    permissionLauncher.launch(arrayOf(Manifest.permission.POST_NOTIFICATIONS))
+                                }
                             }
                             is WeatherEvent.GpsNotEnabled -> {
                                 requestEnableGps()
@@ -117,7 +148,12 @@ class MainActivity : ComponentActivity() {
                         val uiState by weatherViewModel.uiState.collectAsState()
                         when (uiState) {
                             is WeatherUiState.SetupRequired -> InitialSetupScreen(weatherViewModel)
-                            else -> MainScreenWithDrawer(weatherViewModel, favoritesViewModel, navController)
+                            else -> MainScreenWithDrawer(
+                                viewModel = weatherViewModel,
+                                favoritesViewModel = favoritesViewModel,
+                                alertsViewModel = alertsViewModel,
+                                navController = navController
+                            )
                         }
                     }
 

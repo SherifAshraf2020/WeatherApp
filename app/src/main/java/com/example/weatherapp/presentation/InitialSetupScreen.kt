@@ -1,5 +1,9 @@
 package com.example.weatherapp.presentation
 
+import android.Manifest
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -32,7 +36,15 @@ fun InitialSetupScreen(
     var selectedTempUnit by remember { mutableStateOf("C") }
     var selectedTimeFormat by remember { mutableStateOf("24") }
     var selectedWindUnit by remember { mutableStateOf("km/h") }
+    var isNotifEnabled by remember { mutableStateOf(false) }
+    var isStatusBarEnabled by remember { mutableStateOf(true) }
     var showWindDialog by remember { mutableStateOf(false) }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        isNotifEnabled = isGranted
+    }
 
     Box(
         modifier = Modifier
@@ -103,9 +115,25 @@ fun InitialSetupScreen(
                     }
                     HorizontalDivider(color = Color.DarkGray, thickness = 0.5.dp)
 
-                    SwitchRow(icon = Icons.Default.Notifications, title = stringResource(id = R.string.notif_label))
+                    SwitchRow(
+                        icon = Icons.Default.Notifications,
+                        title = stringResource(id = R.string.notif_label),
+                        checked = isNotifEnabled,
+                        onCheckedChange = { checked ->
+                            if (checked && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                            } else {
+                                isNotifEnabled = checked
+                            }
+                        }
+                    )
                     HorizontalDivider(color = Color.DarkGray, thickness = 0.5.dp)
-                    SwitchRow(icon = Icons.Default.Thermostat, title = stringResource(id = R.string.status_label))
+                    SwitchRow(
+                        icon = Icons.Default.Thermostat,
+                        title = stringResource(id = R.string.status_label),
+                        checked = isStatusBarEnabled,
+                        onCheckedChange = { isStatusBarEnabled = it }
+                    )
                 }
 
                 Button(
@@ -113,7 +141,9 @@ fun InitialSetupScreen(
                         viewModel.onSetupDoneClicked(
                             tempUnit = selectedTempUnit,
                             timeFormat = selectedTimeFormat,
-                            windUnit = selectedWindUnit
+                            windUnit = selectedWindUnit,
+                            notificationsEnabled = isNotifEnabled,
+                            statusBarEnabled = isStatusBarEnabled
                         )
                     },
                     modifier = Modifier
@@ -136,7 +166,7 @@ fun InitialSetupScreen(
                 stringResource(id = R.string.wind_unit_knots) to "knots",
                 stringResource(id = R.string.wind_unit_fts) to "ft/s"
             )
-            
+
             AlertDialog(
                 onDismissRequest = { showWindDialog = false },
                 title = { Text(text = stringResource(id = R.string.wind_dialog_title), fontWeight = FontWeight.Bold) },
@@ -216,13 +246,8 @@ private fun SettingRow(
                         .padding(horizontal = 12.dp, vertical = 4.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    val displayValue = if (text == "12" || text == "24") {
-                        text + " " + stringResource(id = if (text == "12") R.string.unit_12h else R.string.unit_24h)
-                        text // Keep it simple if already localized in options list
-                    } else text
-
                     Text(
-                        text = displayValue,
+                        text = text,
                         color = if (isSelected) Color(0xFF00ACC1) else Color.Gray,
                         fontSize = 14.sp,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
@@ -234,8 +259,12 @@ private fun SettingRow(
 }
 
 @Composable
-private fun SwitchRow(icon: ImageVector, title: String) {
-    var checked by remember { mutableStateOf(true) }
+private fun SwitchRow(
+    icon: ImageVector,
+    title: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -248,10 +277,10 @@ private fun SwitchRow(icon: ImageVector, title: String) {
         }
         Switch(
             checked = checked,
-            onCheckedChange = { checked = it },
+            onCheckedChange = onCheckedChange,
             colors = SwitchDefaults.colors(
                 checkedThumbColor = Color.White,
-                checkedTrackColor = Color.Gray,
+                checkedTrackColor = Color(0xFF00ACC1),
                 uncheckedThumbColor = Color.DarkGray
             )
         )
