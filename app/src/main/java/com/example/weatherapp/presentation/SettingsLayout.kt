@@ -65,8 +65,8 @@ fun DrawerMenuContent(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        Text("DEVELOPER", modifier = Modifier.padding(16.dp), color = Color.Gray, fontSize = 12.sp)
-        DrawerMenuItem(Icons.Default.Shield, "Privacy Policy", false) {}
+        Text(stringResource(id = R.string.developer_label), modifier = Modifier.padding(16.dp), color = Color.Gray, fontSize = 12.sp)
+        DrawerMenuItem(Icons.Default.Shield, stringResource(id = R.string.privacy_policy_label), false) {}
     }
 }
 
@@ -87,28 +87,57 @@ fun UnitSettingsDialog(viewModel: WeatherViewModel, onDismiss: () -> Unit) {
         },
         text = {
             Column(modifier = Modifier.fillMaxWidth()) {
-                UnitToggleRow(stringResource(id = R.string.temp_label), Icons.Rounded.WbSunny, listOf("F", "C"), tempUnit) {
+                // Temperature Row
+                UnitToggleRow(
+                    label = stringResource(id = R.string.temp_label),
+                    icon = Icons.Rounded.WbSunny,
+                    options = listOf(
+                        stringResource(id = R.string.unit_f) to "F",
+                        stringResource(id = R.string.unit_c) to "C"
+                    ),
+                    selected = if (tempUnit == "imperial") "F" else if (tempUnit == "metric") "C" else tempUnit
+                ) {
                     viewModel.updateSettings(temp = it)
                 }
                 HorizontalDivider(color = Color.Gray.copy(0.1f), modifier = Modifier.padding(vertical = 4.dp))
 
-                val selectedTimeDisplay = if (timeFormat.contains("12")) "12" else "24"
-                UnitToggleRow(stringResource(id = R.string.time_label), Icons.Rounded.Schedule, listOf("12", "24"), selectedTimeDisplay) {
+                // Time Format Row
+                val selectedTimeValue = if (timeFormat.contains("12")) "12" else "24"
+                UnitToggleRow(
+                    label = stringResource(id = R.string.time_label),
+                    icon = Icons.Rounded.Schedule,
+                    options = listOf(
+                        stringResource(id = R.string.unit_12h) to "12",
+                        stringResource(id = R.string.unit_24h) to "24"
+                    ),
+                    selected = selectedTimeValue
+                ) {
                     viewModel.updateSettings(time = it)
                 }
                 HorizontalDivider(color = Color.Gray.copy(0.1f), modifier = Modifier.padding(vertical = 4.dp))
 
+                // Wind Unit Row
                 UnitDropdownRow(stringResource(id = R.string.wind_label), Icons.Rounded.Air, listOf("km/h", "mph", "m/s", "knots", "ft/s"), windUnit) {
                     viewModel.updateSettings(wind = it)
                 }
                 HorizontalDivider(color = Color.Gray.copy(0.1f), modifier = Modifier.padding(vertical = 4.dp))
 
+                // Pressure Unit Row
                 UnitDropdownRow(stringResource(id = R.string.pressure_label), Icons.Rounded.Compress, listOf("hPa", "mbar", "mmHg", "inHg"), pressureUnit) {
                     viewModel.updateSettings(pressure = it)
                 }
                 HorizontalDivider(color = Color.Gray.copy(0.1f), modifier = Modifier.padding(vertical = 4.dp))
 
-                UnitToggleRow(stringResource(id = R.string.precip_label), Icons.Rounded.InvertColors, listOf("mm", "in"), precipUnit) {
+                // Precipitation Row
+                UnitToggleRow(
+                    label = stringResource(id = R.string.precip_label),
+                    icon = Icons.Rounded.InvertColors,
+                    options = listOf(
+                        stringResource(id = R.string.unit_mm) to "mm",
+                        stringResource(id = R.string.unit_in) to "in"
+                    ),
+                    selected = precipUnit
+                ) {
                     viewModel.updateSettings(precipitation = it)
                 }
             }
@@ -145,7 +174,13 @@ fun DrawerSwitchItem(icon: ImageVector, label: String, checked: Boolean, onCheck
 }
 
 @Composable
-fun UnitToggleRow(label: String, icon: ImageVector, options: List<String>, selected: String, onOptionSelected: (String) -> Unit) {
+fun UnitToggleRow(
+    label: String,
+    icon: ImageVector,
+    options: List<Pair<String, String>>, // Pair of Display Label to Technical Value
+    selected: String,
+    onOptionSelected: (String) -> Unit
+) {
     Row(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(icon, null, tint = Color.LightGray, modifier = Modifier.size(20.dp))
@@ -153,13 +188,13 @@ fun UnitToggleRow(label: String, icon: ImageVector, options: List<String>, selec
             Text(label, color = Color.White, fontSize = 14.sp)
         }
         Row(modifier = Modifier.background(Color(0xFF1A1A1A), RoundedCornerShape(4.dp)).padding(2.dp)) {
-            options.forEach { opt ->
-                val isSelected = opt == selected
+            options.forEach { (displayLabel, value) ->
+                val isSelected = value == selected
                 Box(modifier = Modifier
                     .background(if (isSelected) Color.White else Color.Transparent, RoundedCornerShape(4.dp))
-                    .clickable { onOptionSelected(opt) }
+                    .clickable { onOptionSelected(value) }
                     .padding(horizontal = 12.dp, vertical = 4.dp)) {
-                    Text(opt, color = if (isSelected) Color(0xFF00ACC1) else Color.Gray, fontSize = 12.sp)
+                    Text(displayLabel, color = if (isSelected) Color(0xFF00ACC1) else Color.Gray, fontSize = 12.sp)
                 }
             }
         }
