@@ -22,7 +22,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.weatherapp.data.datasource.location.FusedLocationHelper
-import com.example.weatherapp.data.datasource.local.PreferenceManager
+import com.example.weatherapp.data.datasource.local.sharedpreference.PreferenceManager
 import com.example.weatherapp.data.datasource.local.WeatherLocalDataSource
 import com.example.weatherapp.data.datasource.remote.WeatherRemoteDataSource
 import com.example.weatherapp.data.db.WeatherDatabase

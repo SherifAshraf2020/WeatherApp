@@ -1,4 +1,4 @@
-package com.example.weatherapp.data.datasource.local
+package com.example.weatherapp.data.datasource.local.sharedpreference
 
 import android.content.Context
 import android.content.SharedPreferences

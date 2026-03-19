@@ -1,4 +1,4 @@
-package com.example.weatherapp.data.datasource.local
+package com.example.weatherapp.data.datasource.local.sharedpreference
 
 interface IPreferenceManager {
     fun isFirstRun(): Boolean

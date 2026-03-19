@@ -1,6 +1,6 @@
 package com.example.weatherapp.data.source
 
-import com.example.weatherapp.data.datasource.local.IPreferenceManager
+import com.example.weatherapp.data.datasource.local.sharedpreference.IPreferenceManager
 
 class FakePreferenceManager : IPreferenceManager {
 

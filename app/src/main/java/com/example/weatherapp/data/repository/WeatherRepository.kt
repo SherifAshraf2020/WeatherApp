@@ -1,13 +1,10 @@
 package com.example.weatherapp.data.repository
 
 import com.example.weatherapp.data.Constants
-import com.example.weatherapp.data.datasource.local.IPreferenceManager
+import com.example.weatherapp.data.datasource.local.sharedpreference.IPreferenceManager
 import com.example.weatherapp.data.datasource.local.IWeatherLocalDataSource
-import com.example.weatherapp.data.datasource.local.PreferenceManager
-import com.example.weatherapp.data.datasource.local.WeatherLocalDataSource
 import com.example.weatherapp.data.datasource.local.entities.FavoriteEntity
 import com.example.weatherapp.data.datasource.remote.IWeatherRemoteDataSource
-import com.example.weatherapp.data.datasource.remote.WeatherRemoteDataSource
 import com.example.weatherapp.data.models.home.FullWeatherData
 import kotlinx.coroutines.flow.Flow
 
