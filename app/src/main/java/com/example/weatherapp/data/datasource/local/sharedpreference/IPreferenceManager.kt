@@ -17,4 +17,8 @@ interface IPreferenceManager {
     fun setNotificationsEnabled(enabled: Boolean)
     fun isStatusBarEnabled(): Boolean
     fun setStatusBarEnabled(enabled: Boolean)
+
+    fun saveHomeLocation(lat: Double, lon: Double)
+    fun getHomeLatitude(): Double
+    fun getHomeLongitude(): Double
 }

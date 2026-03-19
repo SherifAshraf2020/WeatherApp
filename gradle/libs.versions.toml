@@ -37,6 +37,7 @@ junitJunit = "4.12"
 
 
 [libraries]
+androidx-compose-material = { group = "androidx.compose.material", name = "material" }
 androidx-compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-core-ktx-v1120 = { module = "androidx.core:core-ktx", version.ref = "coreKtxVersion" }
@@ -84,4 +85,3 @@ junit-junit = { group = "junit", name = "junit", version.ref = "junitJunit" }
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 ksp =  { id = "com.google.devtools.ksp", version.ref = "ksp" }
-

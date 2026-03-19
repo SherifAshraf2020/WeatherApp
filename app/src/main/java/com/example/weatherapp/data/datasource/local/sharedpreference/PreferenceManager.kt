@@ -16,6 +16,8 @@ class PreferenceManager(context: Context): IPreferenceManager {
         private const val KEY_WIND_UNIT = "wind_unit"
         private const val PREF_PRESSURE_UNIT = "pressure_unit"
         private const val PREF_PRECIP_UNIT = "precip_unit"
+        private const val KEY_HOME_LAT = "home_lat"
+        private const val KEY_HOME_LON = "home_lon"
     }
 
     override fun isFirstRun(): Boolean = sharedPreferences.getBoolean(KEY_IS_FIRST_RUN, true)
@@ -73,5 +75,21 @@ class PreferenceManager(context: Context): IPreferenceManager {
 
     override fun setStatusBarEnabled(enabled: Boolean) {
         sharedPreferences.edit().putBoolean("status_bar_enabled", enabled).apply()
+    }
+
+    override fun saveHomeLocation(lat: Double, lon: Double) {
+        sharedPreferences.edit().apply {
+            putLong(KEY_HOME_LAT, java.lang.Double.doubleToRawLongBits(lat))
+            putLong(KEY_HOME_LON, java.lang.Double.doubleToRawLongBits(lon))
+            apply()
+        }
+    }
+
+    override fun getHomeLatitude(): Double {
+        return java.lang.Double.longBitsToDouble(sharedPreferences.getLong(KEY_HOME_LAT, java.lang.Double.doubleToRawLongBits(0.0)))
+    }
+
+    override fun getHomeLongitude(): Double {
+        return java.lang.Double.longBitsToDouble(sharedPreferences.getLong(KEY_HOME_LON, java.lang.Double.doubleToRawLongBits(0.0)))
     }
 }

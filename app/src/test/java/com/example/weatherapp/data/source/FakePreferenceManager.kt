@@ -13,6 +13,8 @@ class FakePreferenceManager : IPreferenceManager {
     var status = true
     var pressure = "hPa"
     var precip = "mm"
+    var homeLat = 0.0
+    var homeLon = 0.0
 
     override fun isFirstRun(): Boolean = first
 
@@ -61,4 +63,13 @@ class FakePreferenceManager : IPreferenceManager {
     override fun setStatusBarEnabled(enabled: Boolean) {
         this.status = enabled
     }
+
+    override fun saveHomeLocation(lat: Double, lon: Double) {
+        this.homeLat = lat
+        this.homeLon = lon
+    }
+
+    override fun getHomeLatitude(): Double = homeLat
+
+    override fun getHomeLongitude(): Double = homeLon
 }

@@ -4,12 +4,17 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 import com.example.weatherapp.data.datasource.local.FavoriteDao
+import com.example.weatherapp.data.datasource.local.HomeWeatherDao
 import com.example.weatherapp.data.datasource.local.entities.FavoriteEntity
+import com.example.weatherapp.data.datasource.local.entities.HomeWeatherEntity
 
-@Database(entities = [FavoriteEntity::class], version = 1, exportSchema = false)
+@Database(entities = [FavoriteEntity::class, HomeWeatherEntity::class], version = 2, exportSchema = false)
+@TypeConverters(Converters::class)
 abstract class WeatherDatabase : RoomDatabase() {
     abstract fun favoriteDao(): FavoriteDao
+    abstract fun homeWeatherDao(): HomeWeatherDao
 
     companion object {
         @Volatile
@@ -21,7 +26,9 @@ abstract class WeatherDatabase : RoomDatabase() {
                     context.applicationContext,
                     WeatherDatabase::class.java,
                     "weather_database"
-                ).build()
+                )
+                .fallbackToDestructiveMigration()
+                .build()
                 INSTANCE = instance
                 instance
             }

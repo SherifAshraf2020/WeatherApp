@@ -21,6 +21,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import com.example.weatherapp.data.datasource.location.FusedLocationHelper
 import com.example.weatherapp.data.datasource.local.sharedpreference.PreferenceManager
 import com.example.weatherapp.data.datasource.local.WeatherLocalDataSource
@@ -28,6 +33,7 @@ import com.example.weatherapp.data.datasource.remote.WeatherRemoteDataSource
 import com.example.weatherapp.data.db.WeatherDatabase
 import com.example.weatherapp.data.repository.WeatherRepository
 import com.example.weatherapp.data.util.LocaleHelper
+import com.example.weatherapp.data.worker.WeatherSyncWorker
 import com.example.weatherapp.presentation.*
 import com.example.weatherapp.presentation.FavoriteDetailsScreen.FavoriteDetailsScreen
 import com.example.weatherapp.presentation.alerts.AlertsViewModel
@@ -40,6 +46,7 @@ import com.example.weatherapp.presentation.map.MapViewModel
 import com.example.weatherapp.presentation.map.MapViewModelFactory
 import com.example.weatherapp.ui.theme.WeatherAppTheme
 import org.osmdroid.config.Configuration
+import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
@@ -61,7 +68,10 @@ class MainActivity : ComponentActivity() {
 
         val locationHelper = FusedLocationHelper(applicationContext)
         val database = WeatherDatabase.getDatabase(applicationContext)
-        val localDataSource = WeatherLocalDataSource(database.favoriteDao())
+        val localDataSource = WeatherLocalDataSource(
+            favoriteDao = database.favoriteDao(),
+            homeWeatherDao = database.homeWeatherDao()
+        )
 
         val repository = WeatherRepository(
             remoteDataSource = WeatherRemoteDataSource(),
@@ -72,6 +82,8 @@ class MainActivity : ComponentActivity() {
         val weatherFactory = WeatherViewModelFactory(repository, locationHelper, applicationContext)
         val favoritesFactory = FavoritesViewModelFactory(repository)
         val alertsFactory = AlertsViewModelFactory(application)
+
+        setupPeriodicSync()
 
         setContent {
             WeatherAppTheme {
@@ -172,6 +184,22 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    private fun setupPeriodicSync() {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
+        val syncRequest = PeriodicWorkRequestBuilder<WeatherSyncWorker>(2, TimeUnit.HOURS)
+            .setConstraints(constraints)
+            .build()
+
+        WorkManager.getInstance(applicationContext).enqueueUniquePeriodicWork(
+            "WeatherSync",
+            ExistingPeriodicWorkPolicy.KEEP,
+            syncRequest
+        )
     }
 
     private fun requestEnableGps() {
