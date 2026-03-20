@@ -15,5 +15,4 @@ sealed class WeatherUiState {
         val precipUnit: String,
         val address: String = ""
     ) : WeatherUiState()
-    data class Error(val message: String) : WeatherUiState()
-}
+    data class Error(val message: String, val isPersistent: Boolean = false) : WeatherUiState()}

@@ -13,20 +13,25 @@ class FusedLocationHelper(private val context: Context) {
         LocationServices.getFusedLocationProviderClient(context.applicationContext)
 
     @SuppressLint("MissingPermission")
-    fun getFreshLocation(onLocationResult: (Location) -> Unit) {
-        val cancellationTokenSource = CancellationTokenSource()
-
-        fusedLocationProviderClient.lastLocation.addOnSuccessListener { location ->
-            location?.let { onLocationResult(it) }
+    fun getFreshLocation(onResult: (Location?) -> Unit) {
+        if (!isLocationEnabled()) {
+            onResult(null)
+            return
         }
+
+        val cancellationTokenSource = CancellationTokenSource()
 
         fusedLocationProviderClient.getCurrentLocation(
             Priority.PRIORITY_HIGH_ACCURACY,
             cancellationTokenSource.token
-        ).addOnSuccessListener { location ->
-            location?.let { onLocationResult(it) }
-        }.addOnFailureListener {
-            cancellationTokenSource.cancel()
+        ).addOnCompleteListener { task ->
+            if (task.isSuccessful && task.result != null) {
+                onResult(task.result)
+            } else {
+                fusedLocationProviderClient.lastLocation.addOnCompleteListener { lastTask ->
+                    onResult(if (lastTask.isSuccessful) lastTask.result else null)
+                }
+            }
         }
     }
 

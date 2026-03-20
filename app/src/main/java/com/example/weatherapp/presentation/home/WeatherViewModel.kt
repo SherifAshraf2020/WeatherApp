@@ -83,20 +83,14 @@ class WeatherViewModel(
     private fun observeHomeWeather() {
         viewModelScope.launch {
             repository.getHomeWeatherFromLocal().collect { data ->
-                if (data != null) {
-                    val unitSymbol = repository.getUserUnitSymbol()
-                    val timeFormat = repository.getSavedTimeFormat()
-                    val windUnit = repository.getSavedWindUnit()
-                    val pressureUnit = repository.getSavedPressureUnit()
-                    val precipUnit = repository.getSavedPrecipitationUnit()
-
+                if (data != null && _uiState.value !is WeatherUiState.Error) {
                     _uiState.value = WeatherUiState.Success(
                         data = processWeatherData(data),
-                        unit = unitSymbol,
-                        timeFormat = timeFormat,
-                        windUnit = windUnit,
-                        pressureUnit = pressureUnit,
-                        precipUnit = precipUnit,
+                        unit = repository.getUserUnitSymbol(),
+                        timeFormat = repository.getSavedTimeFormat(),
+                        windUnit = repository.getSavedWindUnit(),
+                        pressureUnit = repository.getSavedPressureUnit(),
+                        precipUnit = repository.getSavedPrecipitationUnit(),
                         address = _addressState.value
                     )
                     isSplashLoading.value = false
@@ -124,6 +118,7 @@ class WeatherViewModel(
                     _locationState.value = location
                     updateWeatherFromRemote(location.latitude, location.longitude)
                 } else {
+                    _isRefreshing.value = false
                     val lastLocation = _locationState.value
                     if (lastLocation != null) {
                         updateWeatherFromRemote(lastLocation.latitude, lastLocation.longitude)
@@ -132,7 +127,7 @@ class WeatherViewModel(
                         if (_uiState.value !is WeatherUiState.Success) {
                             _uiState.value = WeatherUiState.Error(context.getString(R.string.enable_gps_error))
                         }
-                        _isRefreshing.value = false
+                        viewModelScope.launch { _eventFlow.emit(WeatherEvent.GpsNotEnabled) }
                     }
                 }
             }
@@ -221,6 +216,8 @@ class WeatherViewModel(
     }
 
     fun startGettingLocation() {
+        _uiState.value = WeatherUiState.Loading
+
         locationHelper.getFreshLocation { location ->
             location?.let {
                 _locationState.value = it
@@ -230,13 +227,13 @@ class WeatherViewModel(
                 }
             } ?: run {
                 isSplashLoading.value = false
+                _uiState.value = WeatherUiState.Error(context.getString(R.string.enable_gps_error))
                 viewModelScope.launch {
                     _eventFlow.emit(WeatherEvent.GpsNotEnabled)
                 }
             }
         }
     }
-
     private suspend fun updateAddress(location: Location): String {
         return withContext(Dispatchers.IO) {
             try {
@@ -298,26 +295,21 @@ class WeatherViewModel(
 
             if (!isGpsEnabled) {
                 isSplashLoading.value = false
+                _uiState.value = WeatherUiState.Error(context.getString(R.string.enable_gps_error))
                 _eventFlow.emit(WeatherEvent.GpsNotEnabled)
-                if (_uiState.value !is WeatherUiState.Success) {
-                    _uiState.value = WeatherUiState.Error(context.getString(R.string.enable_gps_error))
-                }
                 return@launch
             }
 
             if (!isNetworkAvailable) {
                 isSplashLoading.value = false
-                if (_uiState.value is WeatherUiState.Success) {
-                    _eventFlow.emit(WeatherEvent.NetworkNotFound)
-                } else {
+                if (_uiState.value !is WeatherUiState.Success) {
                     _uiState.value = WeatherUiState.Error(context.getString(R.string.no_internet_error))
                 }
+                _eventFlow.emit(WeatherEvent.NetworkNotFound)
                 return@launch
             }
 
-            if (_uiState.value !is WeatherUiState.Success) {
-                _uiState.value = WeatherUiState.Loading
-            }
+            _uiState.value = WeatherUiState.Loading
             startGettingLocation()
         }
     }

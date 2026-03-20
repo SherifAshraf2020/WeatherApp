@@ -52,7 +52,6 @@ class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
-
         val preferenceManager = PreferenceManager(applicationContext)
         val currentLang = preferenceManager.getLanguage() ?: "en"
         LocaleHelper.applyLocale(this, currentLang)
@@ -98,12 +97,6 @@ class MainActivity : ComponentActivity() {
                     val locationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
                             permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
 
-                    val notificationGranted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        permissions[Manifest.permission.POST_NOTIFICATIONS] == true
-                    } else true
-
-                    weatherViewModel.toggleNotifications(notificationGranted)
-
                     weatherViewModel.checkStatusAndFetch(
                         isPermissionGranted = locationGranted,
                         isNetworkAvailable = isNetworkAvailable(),
@@ -134,20 +127,11 @@ class MainActivity : ComponentActivity() {
                                 }
                                 permissionLauncher.launch(permissions.toTypedArray())
                             }
-                            is WeatherEvent.RequestNotificationPermission -> {
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                    permissionLauncher.launch(arrayOf(Manifest.permission.POST_NOTIFICATIONS))
-                                }
-                            }
-                            is WeatherEvent.GpsNotEnabled -> {
-                                requestEnableGps()
-                            }
+                            is WeatherEvent.GpsNotEnabled -> { requestEnableGps() }
                             is WeatherEvent.NetworkNotFound -> {
                                 Toast.makeText(this@MainActivity, getString(R.string.no_internet_error), Toast.LENGTH_LONG).show()
                             }
-                            is WeatherEvent.LanguageChanged -> {
-                                recreate()
-                            }
+                            is WeatherEvent.LanguageChanged -> { recreate() }
                             else -> {}
                         }
                     }
@@ -158,9 +142,10 @@ class MainActivity : ComponentActivity() {
                 NavHost(navController = navController, startDestination = "home") {
                     composable("home") {
                         val uiState by weatherViewModel.uiState.collectAsState()
-                        when (uiState) {
-                            is WeatherUiState.SetupRequired -> InitialSetupScreen(weatherViewModel)
-                            else -> MainScreenWithDrawer(
+                        if (uiState is WeatherUiState.SetupRequired) {
+                            InitialSetupScreen(weatherViewModel)
+                        } else {
+                            MainScreenWithDrawer(
                                 viewModel = weatherViewModel,
                                 favoritesViewModel = favoritesViewModel,
                                 alertsViewModel = alertsViewModel,
@@ -173,7 +158,6 @@ class MainActivity : ComponentActivity() {
                         val lat = backStackEntry.arguments?.getString("lat")?.toDoubleOrNull() ?: 0.0
                         val lon = backStackEntry.arguments?.getString("lon")?.toDoubleOrNull() ?: 0.0
                         val city = backStackEntry.arguments?.getString("city") ?: ""
-
                         FavoriteDetailsScreen(lat, lon, city, repository, onBack = { navController.popBackStack() })
                     }
 
@@ -190,11 +174,9 @@ class MainActivity : ComponentActivity() {
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
-
         val syncRequest = PeriodicWorkRequestBuilder<WeatherSyncWorker>(2, TimeUnit.HOURS)
             .setConstraints(constraints)
             .build()
-
         WorkManager.getInstance(applicationContext).enqueueUniquePeriodicWork(
             "WeatherSync",
             ExistingPeriodicWorkPolicy.KEEP,
