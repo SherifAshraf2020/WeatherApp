@@ -130,4 +130,5 @@ dependencies {
     // --- 3. Kotlin & Extensions ---
     implementation(libs.androidx.fragment.ktx)
 
+    implementation(libs.androidx.material)
 }

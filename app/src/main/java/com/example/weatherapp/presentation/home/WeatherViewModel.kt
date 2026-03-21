@@ -142,9 +142,14 @@ class WeatherViewModel(
     fun refresh() {
         viewModelScope.launch {
             if (_isRefreshing.value) return@launch
-            
+
             if (!isNetworkAvailableInternal()) {
                 _eventFlow.emit(WeatherEvent.NetworkNotFound)
+                return@launch
+            }
+
+            if (!locationHelper.isLocationEnabled()) {
+                _eventFlow.emit(WeatherEvent.GpsNotEnabled)
                 return@launch
             }
 
@@ -165,8 +170,12 @@ class WeatherViewModel(
                             updateWeatherFromRemote(lastLocation.latitude, lastLocation.longitude, address)
                         }
                     } else {
+                        // For returning users without cached data, show error state
                         if (_uiState.value !is WeatherUiState.Success) {
                             _uiState.value = WeatherUiState.Error(context.getString(R.string.enable_gps_error))
+                            viewModelScope.launch { _eventFlow.emit(WeatherEvent.GpsNotEnabled) }
+                        } else {
+                            // If we already have success data, just prompt to turn on GPS for the update
                             viewModelScope.launch { _eventFlow.emit(WeatherEvent.GpsNotEnabled) }
                         }
                     }
@@ -218,9 +227,9 @@ class WeatherViewModel(
                 _precipUnit.value = it
             }
 
-            _locationState.value?.let { 
+            _locationState.value?.let {
                 val address = if (_addressState.value == context.getString(R.string.waiting)) "" else _addressState.value
-                fetchWeather(it.latitude, it.longitude, address) 
+                fetchWeather(it.latitude, it.longitude, address)
             }
         }
     }
@@ -275,7 +284,7 @@ class WeatherViewModel(
         if (_uiState.value !is WeatherUiState.Success) {
             _uiState.value = WeatherUiState.Loading
         }
-        
+
         locationHelper.getFreshLocation { location ->
             location?.let {
                 _locationState.value = it
@@ -287,6 +296,9 @@ class WeatherViewModel(
                 isSplashLoading.value = false
                 if (_uiState.value !is WeatherUiState.Success) {
                     _uiState.value = WeatherUiState.Error(context.getString(R.string.enable_gps_error))
+                    viewModelScope.launch { _eventFlow.emit(WeatherEvent.GpsNotEnabled) }
+                } else {
+                    // Already have data, just prompt if GPS is off during manual trigger
                     viewModelScope.launch { _eventFlow.emit(WeatherEvent.GpsNotEnabled) }
                 }
             }
@@ -305,18 +317,18 @@ class WeatherViewModel(
                     addressText
                 } else {
                     val fallback = context.getString(R.string.address_not_found)
-                    withContext(Dispatchers.Main) { 
+                    withContext(Dispatchers.Main) {
                         if (_addressState.value == context.getString(R.string.waiting)) {
-                            _addressState.value = fallback 
+                            _addressState.value = fallback
                         }
                     }
                     fallback
                 }
             } catch (e: Exception) {
                 val fallback = context.getString(R.string.address_not_found)
-                withContext(Dispatchers.Main) { 
+                withContext(Dispatchers.Main) {
                     if (_addressState.value == context.getString(R.string.waiting)) {
-                        _addressState.value = fallback 
+                        _addressState.value = fallback
                     }
                 }
                 fallback
@@ -383,6 +395,9 @@ class WeatherViewModel(
                 isSplashLoading.value = false
                 if (_uiState.value !is WeatherUiState.Success) {
                     _uiState.value = WeatherUiState.Error(context.getString(R.string.enable_gps_error))
+                    _eventFlow.emit(WeatherEvent.GpsNotEnabled)
+                } else {
+                    // Already have success data, just prompt
                     _eventFlow.emit(WeatherEvent.GpsNotEnabled)
                 }
                 return@launch

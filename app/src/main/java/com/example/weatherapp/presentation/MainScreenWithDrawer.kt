@@ -10,8 +10,12 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -104,7 +108,9 @@ fun MainScreenWithDrawer(
                 )
             }
         ) { paddingValues ->
-            Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+            Box(modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)) {
                 HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { page ->
                     when (page) {
                         0 -> WeatherLogicContainer(uiState, viewModel)
@@ -115,6 +121,7 @@ fun MainScreenWithDrawer(
                                 navController.navigate("weather_details/$lat/$lon/$city")
                             }
                         )
+
                         2 -> AlertsScreen(viewModel = alertsViewModel)
                     }
                 }
@@ -137,7 +144,9 @@ fun MainScreenWithDrawer(
                                     .padding(4.dp)
                                     .size(if (isSelected) 10.dp else 8.dp)
                                     .background(
-                                        if (isSelected) Color(0xFF00ACC1) else Color.White.copy(alpha = 0.6f),
+                                        if (isSelected) Color(0xFF00ACC1) else Color.White.copy(
+                                            alpha = 0.6f
+                                        ),
                                         CircleShape
                                     )
                                     .clickable {
@@ -159,21 +168,28 @@ fun MainScreenWithDrawer(
     }
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun WeatherLogicContainer(state: WeatherUiState, viewModel: WeatherViewModel) {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+    val isRefreshing by viewModel.isRefreshing.collectAsState()
+
+    val pullRefreshState = rememberPullRefreshState(
+        refreshing = isRefreshing,
+        onRefresh = { viewModel.refresh() }
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .pullRefresh(pullRefreshState),
+        contentAlignment = Alignment.Center
+    ) {
         when (state) {
-            is WeatherUiState.Loading -> { CircularProgressIndicator() }
-            is WeatherUiState.PermissionRequired -> {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(Icons.Default.LocationOff, null, modifier = Modifier.size(64.dp), tint = Color.Gray)
-                    Text(stringResource(id = R.string.permission_needed), modifier = Modifier.padding(16.dp), color = Color.White)
-                    Button(onClick = { viewModel.startGettingLocation() }) {
-                        Text(stringResource(id = R.string.btn_grant_permission))
-                    }
-                }
+            is WeatherUiState.Loading -> {
+                CircularProgressIndicator(color = Color.White)
             }
+
             is WeatherUiState.Success -> {
                 CurrentWeatherScreen(
                     data = state.data,
@@ -185,24 +201,59 @@ fun WeatherLogicContainer(state: WeatherUiState, viewModel: WeatherViewModel) {
                     address = state.address
                 )
             }
+
             is WeatherUiState.Error -> {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    val isNoInternet = state.message == stringResource(id = R.string.no_internet_error)
+                    val isNoInternet =
+                        state.message == stringResource(id = R.string.no_internet_error)
                     Icon(
                         if (isNoInternet) Icons.Default.CloudOff else Icons.Default.LocationOff,
                         null,
                         modifier = Modifier.size(48.dp),
                         tint = Color.Gray
                     )
-                    Text("${stringResource(id = R.string.error_prefix)} ${state.message}", color = Color.Red, modifier = Modifier.padding(16.dp))
-                    Button(onClick = {
-                        viewModel.checkStatusAndFetch()
-                    }) {
+                    Text(
+                        text = state.message,
+                        color = Color.White,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                    Button(onClick = { viewModel.checkStatusAndFetch() }) {
                         Text(stringResource(id = R.string.btn_retry))
                     }
                 }
             }
-            else -> { Text(stringResource(id = R.string.setup_incomplete), color = Color.White) }
+
+            is WeatherUiState.PermissionRequired -> {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        Icons.Default.LocationOff,
+                        null,
+                        modifier = Modifier.size(64.dp),
+                        tint = Color.Gray
+                    )
+                    Text(
+                        stringResource(id = R.string.permission_needed),
+                        modifier = Modifier.padding(16.dp),
+                        color = Color.White
+                    )
+                    Button(onClick = { viewModel.startGettingLocation() }) {
+                        Text(stringResource(id = R.string.btn_grant_permission))
+                    }
+                }
+            }
+
+            else -> {
+                Text(stringResource(id = R.string.setup_incomplete), color = Color.White)
+            }
         }
+
+        PullRefreshIndicator(
+            refreshing = isRefreshing,
+            state = pullRefreshState,
+            modifier = Modifier.align(Alignment.TopCenter),
+            backgroundColor = MaterialTheme.colorScheme.surface,
+            contentColor = MaterialTheme.colorScheme.primary
+        )
     }
+
 }
