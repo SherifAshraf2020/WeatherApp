@@ -36,7 +36,8 @@ class WeatherSyncWorker(
         if (lat == 0.0 && lon == 0.0) return Result.failure()
 
         return try {
-            val result = repository.refreshHomeWeather(lat, lon, BuildConfig.API_KEY)
+            // Passing empty string for address as it's a background sync
+            val result = repository.refreshHomeWeather(lat, lon, BuildConfig.API_KEY, "")
             if (result.isSuccess) {
                 Result.success()
             } else {

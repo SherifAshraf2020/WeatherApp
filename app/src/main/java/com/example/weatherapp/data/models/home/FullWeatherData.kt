@@ -5,5 +5,6 @@ import com.example.weatherapp.data.models.forecast.ForecastResponse
 
 data class FullWeatherData(
     val current: CurrentWeatherResponse,
-    val forecast: ForecastResponse
+    val forecast: ForecastResponse,
+    val address: String = ""
 )

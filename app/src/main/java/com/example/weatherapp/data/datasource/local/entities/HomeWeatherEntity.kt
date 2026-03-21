@@ -9,5 +9,6 @@ import com.example.weatherapp.data.models.forecast.ForecastResponse
 data class HomeWeatherEntity(
     @PrimaryKey val id: Int = 0,
     val current: CurrentWeatherResponse,
-    val forecast: ForecastResponse
+    val forecast: ForecastResponse,
+    val address: String = ""
 )

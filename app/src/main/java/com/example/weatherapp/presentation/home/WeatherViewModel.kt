@@ -5,6 +5,8 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Geocoder
 import android.location.Location
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Build
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.content.ContextCompat
@@ -23,6 +25,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Locale
@@ -83,15 +86,26 @@ class WeatherViewModel(
     private fun observeHomeWeather() {
         viewModelScope.launch {
             repository.getHomeWeatherFromLocal().collect { data ->
-                if (data != null && _uiState.value !is WeatherUiState.Error) {
+                if (data != null) {
+                    val unitSymbol = repository.getUserUnitSymbol()
+                    val timeFormat = repository.getSavedTimeFormat()
+                    val windUnit = repository.getSavedWindUnit()
+                    val pressureUnit = repository.getSavedPressureUnit()
+                    val precipUnit = repository.getSavedPrecipitationUnit()
+
+                    // Restore address from database if it exists
+                    if (data.address.isNotEmpty() && data.address != context.getString(R.string.waiting)) {
+                        _addressState.value = data.address
+                    }
+
                     _uiState.value = WeatherUiState.Success(
                         data = processWeatherData(data),
-                        unit = repository.getUserUnitSymbol(),
-                        timeFormat = repository.getSavedTimeFormat(),
-                        windUnit = repository.getSavedWindUnit(),
-                        pressureUnit = repository.getSavedPressureUnit(),
-                        precipUnit = repository.getSavedPrecipitationUnit(),
-                        address = _addressState.value
+                        unit = unitSymbol,
+                        timeFormat = timeFormat,
+                        windUnit = windUnit,
+                        pressureUnit = pressureUnit,
+                        precipUnit = precipUnit,
+                        address = data.address.ifEmpty { _addressState.value }
                     )
                     isSplashLoading.value = false
                 }
@@ -105,38 +119,65 @@ class WeatherViewModel(
             isSplashLoading.value = false
         } else {
             viewModelScope.launch {
-                _eventFlow.emit(WeatherEvent.RequestLocationPermission)
+                val cachedData = repository.getHomeWeatherFromLocal().firstOrNull()
+                if (cachedData != null) {
+                    if (cachedData.address.isNotEmpty() && cachedData.address != context.getString(R.string.waiting)) {
+                        _addressState.value = cachedData.address
+                    }
+                    isSplashLoading.value = false
+                } else {
+                    _eventFlow.emit(WeatherEvent.RequestLocationPermission)
+                }
             }
         }
     }
 
+    private fun isNetworkAvailableInternal(): Boolean {
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val network = connectivityManager.activeNetwork ?: return false
+        val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+    }
+
     fun refresh() {
         viewModelScope.launch {
+            if (_isRefreshing.value) return@launch
+            
+            if (!isNetworkAvailableInternal()) {
+                _eventFlow.emit(WeatherEvent.NetworkNotFound)
+                return@launch
+            }
+
             _isRefreshing.value = true
             locationHelper.getFreshLocation { location ->
                 if (location != null) {
                     _locationState.value = location
-                    updateWeatherFromRemote(location.latitude, location.longitude)
+                    viewModelScope.launch {
+                        val address = updateAddress(location)
+                        updateWeatherFromRemote(location.latitude, location.longitude, address)
+                    }
                 } else {
                     _isRefreshing.value = false
                     val lastLocation = _locationState.value
                     if (lastLocation != null) {
-                        updateWeatherFromRemote(lastLocation.latitude, lastLocation.longitude)
-                        viewModelScope.launch { _eventFlow.emit(WeatherEvent.GpsNotEnabled) }
+                        viewModelScope.launch {
+                            val address = if (_addressState.value == context.getString(R.string.waiting)) "" else _addressState.value
+                            updateWeatherFromRemote(lastLocation.latitude, lastLocation.longitude, address)
+                        }
                     } else {
                         if (_uiState.value !is WeatherUiState.Success) {
                             _uiState.value = WeatherUiState.Error(context.getString(R.string.enable_gps_error))
+                            viewModelScope.launch { _eventFlow.emit(WeatherEvent.GpsNotEnabled) }
                         }
-                        viewModelScope.launch { _eventFlow.emit(WeatherEvent.GpsNotEnabled) }
                     }
                 }
             }
         }
     }
 
-    private fun updateWeatherFromRemote(lat: Double, lon: Double) {
+    private fun updateWeatherFromRemote(lat: Double, lon: Double, address: String) {
         viewModelScope.launch {
-            repository.refreshHomeWeather(lat, lon, BuildConfig.API_KEY)
+            repository.refreshHomeWeather(lat, lon, BuildConfig.API_KEY, address)
                 .onSuccess {
                     _isRefreshing.value = false
                 }
@@ -177,7 +218,10 @@ class WeatherViewModel(
                 _precipUnit.value = it
             }
 
-            _locationState.value?.let { fetchWeather(it.latitude, it.longitude, _addressState.value) }
+            _locationState.value?.let { 
+                val address = if (_addressState.value == context.getString(R.string.waiting)) "" else _addressState.value
+                fetchWeather(it.latitude, it.longitude, address) 
+            }
         }
     }
 
@@ -216,8 +260,22 @@ class WeatherViewModel(
     }
 
     fun startGettingLocation() {
-        _uiState.value = WeatherUiState.Loading
+        if (!isNetworkAvailableInternal()) {
+            _uiState.value = WeatherUiState.Error(context.getString(R.string.no_internet_error))
+            viewModelScope.launch { _eventFlow.emit(WeatherEvent.NetworkNotFound) }
+            return
+        }
 
+        if (!locationHelper.isLocationEnabled()) {
+            _uiState.value = WeatherUiState.Error(context.getString(R.string.enable_gps_error))
+            viewModelScope.launch { _eventFlow.emit(WeatherEvent.GpsNotEnabled) }
+            return
+        }
+
+        if (_uiState.value !is WeatherUiState.Success) {
+            _uiState.value = WeatherUiState.Loading
+        }
+        
         locationHelper.getFreshLocation { location ->
             location?.let {
                 _locationState.value = it
@@ -227,13 +285,14 @@ class WeatherViewModel(
                 }
             } ?: run {
                 isSplashLoading.value = false
-                _uiState.value = WeatherUiState.Error(context.getString(R.string.enable_gps_error))
-                viewModelScope.launch {
-                    _eventFlow.emit(WeatherEvent.GpsNotEnabled)
+                if (_uiState.value !is WeatherUiState.Success) {
+                    _uiState.value = WeatherUiState.Error(context.getString(R.string.enable_gps_error))
+                    viewModelScope.launch { _eventFlow.emit(WeatherEvent.GpsNotEnabled) }
                 }
             }
         }
     }
+
     private suspend fun updateAddress(location: Location): String {
         return withContext(Dispatchers.IO) {
             try {
@@ -246,12 +305,20 @@ class WeatherViewModel(
                     addressText
                 } else {
                     val fallback = context.getString(R.string.address_not_found)
-                    withContext(Dispatchers.Main) { _addressState.value = fallback }
+                    withContext(Dispatchers.Main) { 
+                        if (_addressState.value == context.getString(R.string.waiting)) {
+                            _addressState.value = fallback 
+                        }
+                    }
                     fallback
                 }
             } catch (e: Exception) {
                 val fallback = context.getString(R.string.address_not_found)
-                withContext(Dispatchers.Main) { _addressState.value = fallback }
+                withContext(Dispatchers.Main) { 
+                    if (_addressState.value == context.getString(R.string.waiting)) {
+                        _addressState.value = fallback 
+                    }
+                }
                 fallback
             }
         }
@@ -278,14 +345,22 @@ class WeatherViewModel(
 
             _uiState.value = WeatherUiState.Loading
             _eventFlow.emit(WeatherEvent.SetupCompleted)
-            checkStatusAndFetch(false, true, true)
+            checkStatusAndFetch()
         }
     }
 
     fun onMenuClicked() { viewModelScope.launch { _eventFlow.emit(WeatherEvent.OpenNavigationDrawer) } }
     fun onPageIndicatorClicked(pageIndex: Int) { viewModelScope.launch { _eventFlow.emit(WeatherEvent.ScrollToPage(pageIndex)) } }
 
-    fun checkStatusAndFetch(isPermissionGranted: Boolean, isNetworkAvailable: Boolean, isGpsEnabled: Boolean) {
+    fun checkStatusAndFetch(
+        isPermissionGranted: Boolean = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED,
+        isNetworkAvailable: Boolean? = null,
+        isGpsEnabled: Boolean? = null
+    ) {
+        // Force re-checking current status instead of relying on passed parameters
+        val network = isNetworkAvailableInternal()
+        val gps = locationHelper.isLocationEnabled()
+
         viewModelScope.launch {
             if (!isPermissionGranted) {
                 isSplashLoading.value = false
@@ -293,23 +368,29 @@ class WeatherViewModel(
                 return@launch
             }
 
-            if (!isGpsEnabled) {
+            if (!network) {
                 isSplashLoading.value = false
-                _uiState.value = WeatherUiState.Error(context.getString(R.string.enable_gps_error))
-                _eventFlow.emit(WeatherEvent.GpsNotEnabled)
+                if (_uiState.value is WeatherUiState.Success) {
+                    _eventFlow.emit(WeatherEvent.NetworkNotFound)
+                } else {
+                    _uiState.value = WeatherUiState.Error(context.getString(R.string.no_internet_error))
+                    _eventFlow.emit(WeatherEvent.NetworkNotFound)
+                }
                 return@launch
             }
 
-            if (!isNetworkAvailable) {
+            if (!gps) {
                 isSplashLoading.value = false
                 if (_uiState.value !is WeatherUiState.Success) {
-                    _uiState.value = WeatherUiState.Error(context.getString(R.string.no_internet_error))
+                    _uiState.value = WeatherUiState.Error(context.getString(R.string.enable_gps_error))
+                    _eventFlow.emit(WeatherEvent.GpsNotEnabled)
                 }
-                _eventFlow.emit(WeatherEvent.NetworkNotFound)
                 return@launch
             }
 
-            _uiState.value = WeatherUiState.Loading
+            if (_uiState.value !is WeatherUiState.Success) {
+                _uiState.value = WeatherUiState.Loading
+            }
             startGettingLocation()
         }
     }
@@ -317,10 +398,11 @@ class WeatherViewModel(
     private fun fetchWeather(lat: Double, lon: Double, address: String = "") {
         viewModelScope.launch {
             repository.saveHomeLocation(lat, lon)
-            repository.refreshHomeWeather(lat, lon, BuildConfig.API_KEY)
+            repository.refreshHomeWeather(lat, lon, BuildConfig.API_KEY, address)
                 .onFailure {
                     if (_uiState.value !is WeatherUiState.Success) {
                         _uiState.value = WeatherUiState.Error(context.getString(R.string.failed_load_weather))
+                        _eventFlow.emit(WeatherEvent.NetworkNotFound)
                     }
                     isSplashLoading.value = false
                 }

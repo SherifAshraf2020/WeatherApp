@@ -187,9 +187,17 @@ fun WeatherLogicContainer(state: WeatherUiState, viewModel: WeatherViewModel) {
             }
             is WeatherUiState.Error -> {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(Icons.Default.CloudOff, null, modifier = Modifier.size(48.dp), tint = Color.Gray)
+                    val isNoInternet = state.message == stringResource(id = R.string.no_internet_error)
+                    Icon(
+                        if (isNoInternet) Icons.Default.CloudOff else Icons.Default.LocationOff,
+                        null,
+                        modifier = Modifier.size(48.dp),
+                        tint = Color.Gray
+                    )
                     Text("${stringResource(id = R.string.error_prefix)} ${state.message}", color = Color.Red, modifier = Modifier.padding(16.dp))
-                    Button(onClick = { viewModel.startGettingLocation() }) {
+                    Button(onClick = {
+                        viewModel.checkStatusAndFetch()
+                    }) {
                         Text(stringResource(id = R.string.btn_retry))
                     }
                 }

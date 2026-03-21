@@ -33,7 +33,7 @@ class WeatherRepository(
      */
     fun getHomeWeatherFromLocal(): Flow<FullWeatherData?> {
         return localDataSource.getHomeWeather().map { entity ->
-            entity?.let { FullWeatherData(it.current, it.forecast) }
+            entity?.let { FullWeatherData(it.current, it.forecast, it.address) }
         }
     }
 
@@ -41,7 +41,7 @@ class WeatherRepository(
      * Refreshes the home weather from the remote source and updates the local database.
      * This is the "sync" part of sync-first/offline-first.
      */
-    suspend fun refreshHomeWeather(lat: Double, lon: Double, apiKey: String): Result<Unit> {
+    suspend fun refreshHomeWeather(lat: Double, lon: Double, apiKey: String, address: String): Result<Unit> {
         val selectedUnit = preferenceManager.getTempUnit()
         val apiUnit = when (selectedUnit) {
             "C" -> "metric"
@@ -56,13 +56,15 @@ class WeatherRepository(
         return if (currentResult.isSuccess && forecastResult.isSuccess) {
             val fullWeatherData = FullWeatherData(
                 current = currentResult.getOrThrow(),
-                forecast = forecastResult.getOrThrow()
+                forecast = forecastResult.getOrThrow(),
+                address = address
             )
             // Save to local database (id=0 to always keep only one home weather record)
             localDataSource.saveHomeWeather(
                 HomeWeatherEntity(
                     current = fullWeatherData.current,
-                    forecast = fullWeatherData.forecast
+                    forecast = fullWeatherData.forecast,
+                    address = fullWeatherData.address
                 )
             )
             Result.success(Unit)
@@ -73,7 +75,7 @@ class WeatherRepository(
     }
 
     // Legacy method or for specific use cases where you want immediate data without observing
-    suspend fun getHomeWeather(lat: Double, lon: Double, apiKey: String): Result<FullWeatherData> {
+    suspend fun getHomeWeather(lat: Double, lon: Double, apiKey: String, address: String = ""): Result<FullWeatherData> {
         val selectedUnit = preferenceManager.getTempUnit()
         val apiUnit = when (selectedUnit) {
             "C" -> "metric"
@@ -89,7 +91,8 @@ class WeatherRepository(
             Result.success(
                 FullWeatherData(
                     current = currentResult.getOrThrow(),
-                    forecast = forecastResult.getOrThrow()
+                    forecast = forecastResult.getOrThrow(),
+                    address = address
                 )
             )
         } else {

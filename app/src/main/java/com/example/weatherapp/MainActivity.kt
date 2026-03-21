@@ -109,11 +109,16 @@ class MainActivity : ComponentActivity() {
                         this@MainActivity, Manifest.permission.ACCESS_FINE_LOCATION
                     ) == PackageManager.PERMISSION_GRANTED
 
-                    weatherViewModel.checkStatusAndFetch(
-                        isPermissionGranted = isLocationGranted,
-                        isNetworkAvailable = isNetworkAvailable(),
-                        isGpsEnabled = locationHelper.isLocationEnabled()
-                    )
+                    // If we are not a first-time user, we might have cached data.
+                    // The ViewModel's checkAppStartStatus already handles the initial fetch logic.
+                    // We only call checkStatusAndFetch here if it's the first run to trigger the initial flow.
+                    if (repository.isFirstTimeUser()) {
+                        weatherViewModel.checkStatusAndFetch(
+                            isPermissionGranted = isLocationGranted,
+                            isNetworkAvailable = isNetworkAvailable(),
+                            isGpsEnabled = locationHelper.isLocationEnabled()
+                        )
+                    }
 
                     weatherViewModel.eventFlow.collect { event ->
                         when (event) {
