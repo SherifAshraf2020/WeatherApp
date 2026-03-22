@@ -63,7 +63,8 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
-    implementation(libs.androidx.compose.material) // Required for PullRefresh
+    implementation(libs.androidx.compose.material)
+    implementation(libs.androidx.room3.runtime)
 
     testImplementation(libs.junit)
     testImplementation(libs.junit.junit)
@@ -131,4 +132,7 @@ dependencies {
     implementation(libs.androidx.fragment.ktx)
 
     implementation(libs.androidx.material)
+
+    implementation(libs.androidx.glance.appwidget)
+    implementation(libs.androidx.glance.material3)
 }
