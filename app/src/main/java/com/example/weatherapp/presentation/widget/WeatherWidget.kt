@@ -15,10 +15,14 @@ import androidx.glance.appwidget.provideContent
 import androidx.glance.layout.*
 import androidx.glance.text.*
 import androidx.glance.unit.ColorProvider
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import com.example.weatherapp.R
 import com.example.weatherapp.data.db.WeatherDatabase
 import com.example.weatherapp.data.util.localize
 import com.example.weatherapp.data.util.localizeTemp
+import com.example.weatherapp.data.worker.WeatherSyncWorker
 import kotlinx.coroutines.flow.firstOrNull
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -154,6 +158,11 @@ class WeatherWidget : GlanceAppWidget() {
 
 class RefreshActionCallback : ActionCallback {
     override suspend fun onAction(context: Context, glanceId: GlanceId, parameters: ActionParameters) {
-        WeatherWidget().update(context, glanceId)
+        val workRequest = OneTimeWorkRequestBuilder<WeatherSyncWorker>().build()
+        WorkManager.getInstance(context).enqueueUniqueWork(
+            "ManualWidgetRefresh",
+            ExistingWorkPolicy.REPLACE,
+            workRequest
+        )
     }
 }

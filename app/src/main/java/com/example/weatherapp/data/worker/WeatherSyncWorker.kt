@@ -1,6 +1,7 @@
 package com.example.weatherapp.data.worker
 
 import android.content.Context
+import androidx.glance.appwidget.updateAll
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.example.weatherapp.BuildConfig
@@ -9,6 +10,7 @@ import com.example.weatherapp.data.datasource.local.sharedpreference.PreferenceM
 import com.example.weatherapp.data.datasource.remote.WeatherRemoteDataSource
 import com.example.weatherapp.data.db.WeatherDatabase
 import com.example.weatherapp.data.repository.WeatherRepository
+import com.example.weatherapp.presentation.widget.WeatherWidget
 
 class WeatherSyncWorker(
     context: Context,
@@ -39,6 +41,7 @@ class WeatherSyncWorker(
             // Passing empty string for address as it's a background sync
             val result = repository.refreshHomeWeather(lat, lon, BuildConfig.API_KEY, "")
             if (result.isSuccess) {
+                WeatherWidget().updateAll(applicationContext)
                 Result.success()
             } else {
                 Result.retry()
